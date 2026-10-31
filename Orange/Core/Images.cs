@@ -20,6 +20,48 @@ public static class Images
 
     public static IReadOnlyCollection<string> Targets => Formats.Keys;
 
+    /// <summary>Decodes an image from the phone for the clipboard, or returns null if the bytes aren't a usable photo format.</summary>
+    public static System.Windows.Media.Imaging.BitmapSource? ForClipboard(byte[] data)
+    {
+        try
+        {
+            var info = new MagickImageInfo(data);
+            if (info.Format is not (MagickFormat.Jpeg or MagickFormat.Png or MagickFormat.Heic or MagickFormat.Heif or MagickFormat.Avif
+                    or MagickFormat.WebP or MagickFormat.Gif or MagickFormat.Tiff or MagickFormat.Bmp)
+                || (ulong)info.Width * info.Height > 100_000_000) return null;
+
+            using var img = new MagickImage(data);
+            img.AutoOrient();
+            // Many Windows programs paste clipboard transparency as black.
+            img.BackgroundColor = MagickColors.White;
+            img.Alpha(AlphaAction.Remove);
+
+            var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+            bitmap.BeginInit();
+            bitmap.StreamSource = new MemoryStream(img.ToByteArray(MagickFormat.Png));
+            bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+            bitmap.Freeze(); // decoded on a server thread, used on the UI thread
+            return bitmap;
+        }
+        catch (MagickException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Encodes a clipboard image as PNG for the phone. Alpha is dropped: screenshots on the clipboard
+    /// often report every pixel as transparent, which would arrive as a blank picture.</summary>
+    public static byte[] FromClipboard(System.Windows.Media.Imaging.BitmapSource image)
+    {
+        var opaque = new System.Windows.Media.Imaging.FormatConvertedBitmap(image, System.Windows.Media.PixelFormats.Bgr24, null, 0);
+        var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(opaque));
+        using var output = new MemoryStream();
+        encoder.Save(output);
+        return output.ToArray();
+    }
+
     public static Task<string> ConvertAsync(string input, string ext) => Task.Run(() =>
     {
         var output = Paths.Output(input, ext);

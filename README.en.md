@@ -44,6 +44,9 @@ Scan a QR code with the iPhone camera and Orange becomes an icon on your Home Sc
 - **iPhone → PC:** tap *Send to PC* and pick photos, videos or files. They land in a folder on your PC, with a notification.
 - **PC → iPhone:** drag a file, tap **Alt** and drop it on *iPhone*. It shows up on your phone, ready to download.
 - **Share menu:** with an iOS Shortcut, *Send to Orange* appears when you share from Photos or Files, just like AirDrop.
+- **Copy text to the PC:** paste the text on the Orange page or, with an iOS Shortcut, double-tap the back of the iPhone. Then press Ctrl+V on the PC.
+- **Copy images to the PC:** with the same iOS Shortcut, an image copied on the iPhone is ready for Ctrl+V.
+- **Copy text or images to the iPhone:** copy on the PC, then use *Get from PC* on the Orange page or an iOS Shortcut.
 
 Files go straight over your Wi-Fi. Only phones that scanned your code can connect.
 

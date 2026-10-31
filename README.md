@@ -44,6 +44,9 @@ Escanea un código QR con la cámara del iPhone y Orange queda como un icono en 
 - **iPhone → PC:** toca *Enviar a la PC* y elige fotos, videos o archivos. Llegan a una carpeta de tu PC con aviso.
 - **PC → iPhone:** arrastra un archivo, pulsa **Alt** y suéltalo en *iPhone*. Aparece en tu teléfono listo para descargar.
 - **Menú Compartir:** con un atajo de iOS, *Enviar a Orange* aparece al compartir desde Fotos o Archivos, igual que AirDrop.
+- **Copiar texto a la PC:** pega el texto en la página de Orange o, con un atajo de iOS, toca dos veces la parte trasera del iPhone. Después pulsa Ctrl+V en la PC.
+- **Copiar imágenes a la PC:** con el mismo atajo de iOS, una imagen copiada en el iPhone queda lista para Ctrl+V.
+- **Copiar texto o imágenes al iPhone:** copia en la PC y usa *Traer de la PC* en la página de Orange o un atajo de iOS.
 
 Los archivos van directo por tu Wi-Fi. Solo los teléfonos que escanearon tu código pueden conectarse.
 

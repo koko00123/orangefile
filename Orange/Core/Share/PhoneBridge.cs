@@ -104,6 +104,8 @@ public static class PhoneBridge
             });
             // Cast to Delegate so it's treated as a route handler and the IResult is written (not discarded).
             app.MapPost("/api/upload", (Delegate)ReceiveAsync);
+            app.MapPost("/api/clipboard", (Delegate)ReceiveClipboardAsync);
+            app.MapGet("/api/clipboard", (Delegate)SendClipboardAsync);
 
             await app.StartAsync();
             _server = app;
@@ -181,6 +183,91 @@ public static class PhoneBridge
                 saved.Count == 1 ? System.IO.Path.GetFileName(saved[0]) : Loc.F("{0} files", saved.Count), force: true);
         });
         return Results.Ok(new { saved = saved.Select(System.IO.Path.GetFileName) });
+    }
+
+    /// <summary>Puts text or an image from the phone on the PC clipboard. Accepts form fields "file" and "text"
+    /// (iOS Shortcut "Form" body; the shortcut can't tell which one the clipboard holds, so it sends both and a
+    /// real image wins) and raw text bodies (the web page). The text itself is never logged: it may be a password.</summary>
+    private static async Task<IResult> ReceiveClipboardAsync(HttpContext ctx)
+    {
+        const int maxTextLength = 4 * 1024 * 1024;
+        var limit = ctx.Features.Get<IHttpMaxRequestBodySizeFeature>();
+        if (limit != null) limit.MaxRequestBodySize = 64 * 1024 * 1024; // room for a full-size photo
+
+        string text;
+        if (ctx.Request.HasFormContentType)
+        {
+            var form = await ctx.Request.ReadFormAsync();
+            text = form["text"].ToString();
+            if (form.Files["file"] is { } file)
+            {
+                using var data = new MemoryStream();
+                await file.CopyToAsync(data);
+                if (Images.ForClipboard(data.ToArray()) is { } image)
+                {
+                    await OnClipboardAsync(() =>
+                    {
+                        System.Windows.Clipboard.SetImage(image);
+                        return true;
+                    });
+                    _ = App.Instance.Dispatcher.BeginInvoke(() =>
+                        App.Instance.Notify(Loc.T("Image copied from your phone"), Loc.T("Paste with Ctrl+V"), force: true));
+                    JobRunner.Log($"OK   Clipboard image from phone: {image.PixelWidth}x{image.PixelHeight}");
+                    return Results.Ok(new { width = image.PixelWidth, height = image.PixelHeight });
+                }
+            }
+        }
+        else
+        {
+            using var reader = new StreamReader(ctx.Request.Body, Encoding.UTF8);
+            text = await reader.ReadToEndAsync();
+        }
+        if (text.Length == 0) return Results.BadRequest("No text received.");
+        if (text.Length > maxTextLength) return Results.StatusCode(StatusCodes.Status413PayloadTooLarge);
+
+        text = text.ReplaceLineEndings("\r\n");
+        // Awaited so the phone hears about a failure.
+        await OnClipboardAsync(() =>
+        {
+            System.Windows.Clipboard.SetText(text);
+            return true;
+        });
+        _ = App.Instance.Dispatcher.BeginInvoke(() =>
+            App.Instance.Notify(Loc.T("Copied from your phone"), Loc.F("{0} characters — paste with Ctrl+V", text.Length), force: true));
+        JobRunner.Log($"OK   Clipboard from phone: {text.Length} characters");
+        return Results.Ok(new { length = text.Length });
+    }
+
+    /// <summary>Gives the phone the text or image on the PC clipboard, with a notice on the PC every time. Copies
+    /// that password managers mark as private are skipped: this travels as plain http. The content is never logged.</summary>
+    private static async Task<IResult> SendClipboardAsync(HttpContext ctx)
+    {
+        ctx.Response.Headers.CacheControl = "no-store";
+        var (text, png) = await OnClipboardAsync<(string, byte[]?)>(() =>
+        {
+            if (System.Windows.Clipboard.ContainsData("ExcludeClipboardContentFromMonitorProcessing")) return ("", null);
+            if (System.Windows.Clipboard.ContainsText()) return (System.Windows.Clipboard.GetText(), null);
+            return System.Windows.Clipboard.ContainsImage() && System.Windows.Clipboard.GetImage() is { } image
+                ? ("", Images.FromClipboard(image))
+                : ("", null);
+        });
+        if (text.Length == 0 && png == null) return Results.NoContent();
+
+        _ = App.Instance.Dispatcher.BeginInvoke(() =>
+            App.Instance.Notify("Orange", Loc.T("Your phone read the PC clipboard"), force: true));
+        JobRunner.Log(png != null ? $"OK   Clipboard image to phone: {png.Length} bytes" : $"OK   Clipboard to phone: {text.Length} characters");
+        return png != null ? Results.Bytes(png, "image/png") : Results.Text(text, "text/plain", Encoding.UTF8);
+    }
+
+    /// <summary>Runs on the UI thread, the only one where the clipboard works. Other programs can hold the
+    /// clipboard for a moment, so a busy clipboard is retried for about a second, without blocking the UI.</summary>
+    private static async Task<T> OnClipboardAsync<T>(Func<T> action)
+    {
+        for (int retries = 10; ; retries--)
+        {
+            try { return await App.Instance.Dispatcher.InvokeAsync(action); }
+            catch (System.Runtime.InteropServices.ExternalException) when (retries > 0) { await Task.Delay(100); }
+        }
     }
 
     private static string SafeName(string name)

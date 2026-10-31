@@ -16,6 +16,9 @@ public static class PhonePage
             key = token,
             open = Loc.T("Open"), download = Loc.T("Download"), remove = Loc.T("Remove"),
             sending = Loc.T("Sending"), sent = Loc.T("Sent"), failed = Loc.T("Failed"),
+            clipDone = Loc.T("Ready. Paste on the PC with Ctrl+V."),
+            clipEmpty = Loc.T("The PC clipboard has no text or image to share."),
+            clipHold = Loc.T("Touch and hold the image to copy it."),
             empty = Loc.F("Nothing here yet. On the PC, drag a file, press {0} and drop it on “iPhone”.",
                 Settings.KeyName(Settings.Current.ActionsKey)),
         });
@@ -32,6 +35,13 @@ public static class PhonePage
             .Replace("{{copy}}", T("Copy"))
             .Replace("{{copied}}", T("Copied ✓"))
             .Replace("{{uploadUrl}}", WebUtility.HtmlEncode($"http://{host}/api/upload?k={Uri.EscapeDataString(token)}"))
+            .Replace("{{clipTitle}}", T("Copy to PC"))
+            .Replace("{{clipPlaceholder}}", T("Paste or type text here"))
+            .Replace("{{clipSend}}", T("Send to PC clipboard"))
+            .Replace("{{clipGetTitle}}", T("Copy from PC"))
+            .Replace("{{clipGet}}", T("Get from PC"))
+            .Replace("{{clipShortcutTitle}}", T("Clipboard shortcuts"))
+            .Replace("{{clipUrl}}", WebUtility.HtmlEncode($"http://{host}/api/clipboard?k={Uri.EscapeDataString(token)}"))
             .Replace("{{data}}", js);
     }
 
@@ -77,6 +87,9 @@ public static class PhonePage
   #uploads:empty { display:none; }
   #uploads { margin-top:12px; }
   .tip { color:var(--muted); font-size:12px; margin:26px 4px 0; text-align:center; }
+  .url { flex:1; min-width:0; border:0; border-radius:8px; padding:8px; background:#34343a; color:var(--text); font:12px ui-monospace,Menlo,monospace; }
+  /* 16px: smaller text makes iOS zoom the page when the field gets focus. */
+  textarea { display:block; width:100%; height:96px; resize:vertical; border:0; border-radius:10px; padding:10px; background:#34343a; color:var(--text); font:16px/1.4 -apple-system, sans-serif; }
 </style>
 </head>
 <body>
@@ -88,6 +101,24 @@ public static class PhonePage
 <label class="send">{{send}}<small>{{sendHint}}</small><input id="picker" type="file" multiple></label>
 <div id="uploads" class="list"></div>
 
+<h2>{{clipTitle}}</h2>
+<div class="list"><div class="row" style="flex-wrap:wrap">
+  <textarea id="clipText" placeholder="{{clipPlaceholder}}"></textarea>
+  <span class="sub" id="clipStatus" style="flex:1;min-width:0"></span>
+  <button class="btn primary" id="clipSend">{{clipSend}}</button>
+</div></div>
+
+<h2>{{clipGetTitle}}</h2>
+<div class="list"><div class="row" style="flex-wrap:wrap">
+  <span class="sub" id="clipGetStatus" style="flex:1;min-width:0"></span>
+  <button class="btn primary" id="clipGet">{{clipGet}}</button>
+  <div id="clipResult" style="display:none;width:100%;text-align:right">
+    <textarea readonly style="margin-bottom:10px"></textarea>
+    <button class="btn primary copyBtn" data-done="{{copied}}">{{copy}}</button>
+  </div>
+  <img id="clipImage" alt="" style="display:none;width:100%;border-radius:10px">
+</div></div>
+
 <h2>{{fromPc}}</h2>
 <div id="files" class="list"><div class="empty">…</div></div>
 
@@ -96,8 +127,15 @@ public static class PhonePage
 <h2>{{shortcutTitle}}</h2>
 <div class="list"><div class="row" style="flex-wrap:wrap">
   <span class="sub" style="width:100%">{{shortcutHint}}</span>
-  <input id="sc" readonly value="{{uploadUrl}}" style="flex:1;min-width:0;border:0;border-radius:8px;padding:8px;background:#34343a;color:var(--text);font:12px ui-monospace,Menlo,monospace">
-  <button class="btn primary" id="copyBtn" data-done="{{copied}}">{{copy}}</button>
+  <input class="url" readonly value="{{uploadUrl}}">
+  <button class="btn primary copyBtn" data-done="{{copied}}">{{copy}}</button>
+</div></div>
+
+<h2>{{clipShortcutTitle}}</h2>
+<div class="list"><div class="row" style="flex-wrap:wrap">
+  <span class="sub" style="width:100%">{{shortcutHint}}</span>
+  <input class="url" readonly value="{{clipUrl}}">
+  <button class="btn primary copyBtn" data-done="{{copied}}">{{copy}}</button>
 </div></div>
 
 <script>
@@ -161,13 +199,48 @@ document.getElementById('picker').addEventListener('change', async e => {
 });
 
 // The page is plain http on the LAN, where navigator.clipboard is unavailable — select + execCommand still works on iOS.
-document.getElementById('copyBtn').addEventListener('click', e => {
-  const sc = document.getElementById('sc');
+document.querySelectorAll('.copyBtn').forEach(btn => btn.addEventListener('click', e => {
+  const sc = e.target.previousElementSibling;
   sc.focus(); sc.setSelectionRange(0, sc.value.length);
   let ok = false;
   try { ok = document.execCommand('copy'); } catch (err) {}
   sc.blur();
   if (ok) e.target.textContent = e.target.dataset.done;
+}));
+
+document.getElementById('clipSend').addEventListener('click', async () => {
+  const box = document.getElementById('clipText'), status = document.getElementById('clipStatus');
+  if (!box.value) return;
+  let ok = false;
+  try {
+    const r = await fetch(api('/api/clipboard'), { method: 'POST', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: box.value });
+    ok = r.ok;
+  } catch (e) { /* PC asleep or out of Wi-Fi */ }
+  status.className = 'sub ' + (ok ? 'ok' : 'bad');
+  status.textContent = ok ? '✓ ' + D.clipDone : '✕ ' + D.failed;
+  if (ok) box.value = '';
+});
+
+// Two taps on purpose: iOS only lets a page copy right after a tap, and the wait for the PC uses that moment up.
+document.getElementById('clipGet').addEventListener('click', async () => {
+  const result = document.getElementById('clipResult'), status = document.getElementById('clipGetStatus');
+  const copy = result.querySelector('.copyBtn'), image = document.getElementById('clipImage');
+  let text = null, blob = null;
+  try {
+    const r = await fetch(api('/api/clipboard'), { cache: 'no-store' });
+    if (r.ok && (r.headers.get('Content-Type') || '').startsWith('image/')) blob = await r.blob();
+    else if (r.ok) text = await r.text();
+  } catch (e) { /* PC asleep or out of Wi-Fi */ }
+  status.className = 'sub ' + (text || blob ? '' : 'bad');
+  status.textContent = blob ? D.clipHold : text ? '' : text === null ? '✕ ' + D.failed : D.clipEmpty;
+  result.style.display = text ? 'block' : 'none';
+  if (image.src) URL.revokeObjectURL(image.src);
+  image.style.display = blob ? 'block' : 'none';
+  image.src = blob ? URL.createObjectURL(blob) : '';
+  if (!text) return;
+  result.querySelector('textarea').value = text;
+  copy.dataset.label = copy.dataset.label || copy.textContent;
+  copy.textContent = copy.dataset.label;
 });
 
 load();

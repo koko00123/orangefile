@@ -104,6 +104,34 @@ public sealed class PairWindow : Window
         };
         root.Children.Add(shortcut);
 
+        // Copy-to-PC shortcut (optional)
+        root.Children.Add(new Expander
+        {
+            Header = Loc.T("Optional: copy text from the iPhone to this PC"),
+            Margin = new Thickness(0, 0, 0, 10),
+            Content = Steps(
+                Loc.T("In the Shortcuts app tap +, name it “Copy to PC”, and add “Get Clipboard”."),
+                Loc.T("Add “Get Contents of URL” with this address:"),
+                $"http://{PhoneBridge.LanAddress()}:{Settings.Current.PhonePort}/api/clipboard?k={Settings.Current.PhoneToken}",
+                Loc.T("Method: POST · Request Body: Form · add a Text field named “text” = Clipboard."),
+                Loc.T("For images too, add a File field named “file” = Clipboard."),
+                Loc.T("In iPhone Settings → Accessibility → Touch → Back Tap, set Double Tap to “Copy to PC”."),
+                Loc.T("Done. Copy text on the iPhone, double-tap the back of the phone, and press Ctrl+V on the PC.")),
+        });
+
+        // Copy-from-PC shortcut (optional)
+        root.Children.Add(new Expander
+        {
+            Header = Loc.T("Optional: copy text from this PC to the iPhone"),
+            Margin = new Thickness(0, 0, 0, 10),
+            Content = Steps(
+                Loc.T("In the Shortcuts app tap +, name it “Copy from PC”, and add “Get Contents of URL” with this address:"),
+                $"http://{PhoneBridge.LanAddress()}:{Settings.Current.PhonePort}/api/clipboard?k={Settings.Current.PhoneToken}",
+                Loc.T("Leave Method as GET, then add “Copy to Clipboard”."),
+                Loc.T("In iPhone Settings → Accessibility → Touch → Back Tap, set Triple Tap to “Copy from PC”."),
+                Loc.T("Done. Press Ctrl+C on the PC, triple-tap the back of the phone, and paste on the iPhone.")),
+        });
+
         // Buttons
         var buttons = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Left };
         buttons.Children.Add(Button(Loc.T("Open received folder"), () =>
