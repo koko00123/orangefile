@@ -40,6 +40,17 @@ public static class Loc
             ["Start with Windows"] = "Iniciar con Windows", ["Quit Orange"] = "Salir de Orange",
             ["Orange — file converter"] = "Orange — conversor de archivos", ["Choose files for Orange"] = "Elige archivos para Orange",
 
+            // Desktop boxes
+            ["Edit desktop"] = "Editar escritorio", ["Editing desktop · Esc to finish"] = "Editando el escritorio · Esc para terminar",
+            ["+ New box"] = "+ Nuevo cajón", ["New box"] = "Nuevo cajón", ["Box options"] = "Opciones del cajón",
+            ["Rename…"] = "Renombrar…", ["Rename box"] = "Renombrar cajón", ["Box name:"] = "Nombre del cajón:",
+            ["Color"] = "Color", ["Sort by"] = "Ordenar por", ["Name"] = "Nombre", ["Type"] = "Tipo", ["Manual"] = "Manual",
+            ["Rule: extensions…"] = "Regla: extensiones…", ["Box rule"] = "Regla del cajón",
+            ["Extensions that go into this box automatically (e.g. .pdf; .docx):"] = "Extensiones que entran solas a este cajón (ej. .pdf; .docx):",
+            ["Remove rules"] = "Quitar reglas", ["Move to monitor"] = "Mover al monitor", ["Delete box"] = "Borrar cajón",
+            ["Delete the box \"{0}\"? Its icons stay on the desktop."] = "¿Borrar el cajón «{0}»? Sus íconos se quedan en el escritorio.",
+            ["{0} icons"] = "{0} íconos", ["Place the box over icons and press Done"] = "Coloca el cajón sobre íconos y pulsa Listo",
+
             // Notifications
             ["Done"] = "Listo", ["{0} files done"] = "{0} archivos listos", ["{0}: {1} failed"] = "{0}: {1} con error",
             ["Copied"] = "Copiado", ["{0} item(s) — paste anywhere with Ctrl+V"] = "{0} elemento(s) — pégalos con Ctrl+V",
@@ -189,6 +200,17 @@ public static class Loc
             ["Convert files…"] = "Converter arquivos…", ["Settings…"] = "Configurações…", ["Open output log"] = "Abrir registro",
             ["Start with Windows"] = "Iniciar com o Windows", ["Quit Orange"] = "Sair do Orange",
             ["Orange — file converter"] = "Orange — conversor de arquivos", ["Choose files for Orange"] = "Escolha arquivos para o Orange",
+
+            // Desktop boxes
+            ["Edit desktop"] = "Editar área de trabalho", ["Editing desktop · Esc to finish"] = "Editando a área de trabalho · Esc para terminar",
+            ["+ New box"] = "+ Nova caixa", ["New box"] = "Nova caixa", ["Box options"] = "Opções da caixa",
+            ["Rename…"] = "Renomear…", ["Rename box"] = "Renomear caixa", ["Box name:"] = "Nome da caixa:",
+            ["Color"] = "Cor", ["Sort by"] = "Ordenar por", ["Name"] = "Nome", ["Type"] = "Tipo", ["Manual"] = "Manual",
+            ["Rule: extensions…"] = "Regra: extensões…", ["Box rule"] = "Regra da caixa",
+            ["Extensions that go into this box automatically (e.g. .pdf; .docx):"] = "Extensões que entram sozinhas nesta caixa (ex. .pdf; .docx):",
+            ["Remove rules"] = "Remover regras", ["Move to monitor"] = "Mover para o monitor", ["Delete box"] = "Excluir caixa",
+            ["Delete the box \"{0}\"? Its icons stay on the desktop."] = "Excluir a caixa \"{0}\"? Os ícones continuam na área de trabalho.",
+            ["{0} icons"] = "{0} ícones", ["Place the box over icons and press Done"] = "Coloque a caixa sobre ícones e pressione Pronto",
 
             // Notifications
             ["Done"] = "Pronto", ["{0} files done"] = "{0} arquivos prontos", ["{0}: {1} failed"] = "{0}: {1} com erro",

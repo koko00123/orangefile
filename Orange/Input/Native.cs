@@ -212,6 +212,16 @@ internal static class Native
     public const uint GW_HWNDPREV = 3;
     public const int RGN_DIFF = 4;
     public static readonly IntPtr HWND_BOTTOM = new(1);
+    public static readonly IntPtr HWND_MESSAGE = new(-3);
+    public const uint SWP_NOZORDER = 0x0004;
+    public const int WM_EXITSIZEMOVE = 0x0232, WM_HOTKEY = 0x0312;
+    public const uint MOD_NOREPEAT = 0x4000;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool RegisterHotKey(IntPtr hWnd, int id, uint modifiers, uint vk);
+
+    [DllImport("user32.dll")]
+    public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr data);
 

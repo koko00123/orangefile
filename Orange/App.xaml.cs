@@ -14,6 +14,8 @@ public partial class App : Application
     private WheelWindow? _wheel;
     private Mutex? _singleInstance;
     private Orange.Desktop.Engine.DesktopEngine? _desktop;
+    private Orange.UI.Desktop.EditSession? _desktopEdit;
+    private Orange.UI.Desktop.HotkeyWindow? _desktopHotkey;
 
     public static App Instance => (App)Current;
 
@@ -54,6 +56,9 @@ public partial class App : Application
             return;
         }
 
+        // Try the Desktop module for one run without saving the setting.
+        if (e.Args.Contains("--desktop")) Settings.Current.DesktopModuleEnabled = true;
+
         _singleInstance = new Mutex(true, "Orange.SingleInstance", out bool isFirst);
         if (!isFirst)
         {
@@ -92,6 +97,24 @@ public partial class App : Application
         _desktop = new Orange.Desktop.Engine.DesktopEngine(new Orange.Desktop.Shell.ShellDesktopIcons(),
             new Orange.Desktop.Shell.Win32Monitors(), Orange.Desktop.Store.DesktopStore.Default());
         _desktop.Start();
+
+        _desktopHotkey = new Orange.UI.Desktop.HotkeyWindow();
+        _desktopHotkey.Pressed += ToggleDesktopEdit;
+        _desktopHotkey.Register(Settings.Current.DesktopEditHotkey);
+        BuildTrayMenu();
+    }
+
+    /// <summary>Enters or leaves edit mode (tray menu and hotkey).</summary>
+    public void ToggleDesktopEdit()
+    {
+        if (_desktop is null) return;
+        try
+        {
+            if (_desktopEdit is { IsOpen: true }) { _desktopEdit.Close(); return; }
+            _desktopEdit = new Orange.UI.Desktop.EditSession(_desktop);
+            _desktopEdit.Open();
+        }
+        catch (Exception ex) { JobRunner.Log($"Desktop: edit mode failed: {ex}"); }
     }
 
     // ── Updates ───────────────────────────────────────────────────────────
@@ -174,6 +197,8 @@ public partial class App : Application
         }
         menu.Items.Add(Loc.T("Convert files…"), null, (_, _) => PickAndShowMenu());
         menu.Items.Add(Loc.T("Connect phone…"), null, (_, _) => PairWindow.ShowSingle());
+        if (_desktop is not null)
+            menu.Items.Add($"{Loc.T("Edit desktop")}	{Settings.Current.DesktopEditHotkey}", null, (_, _) => ToggleDesktopEdit());
         menu.Items.Add(Loc.T("Settings…"), null, (_, _) => SettingsWindow.ShowSingle());
         menu.Items.Add(Loc.T("Open output log"), null, (_, _) => JobRunner.OpenLog());
         menu.Items.Add(new Forms.ToolStripSeparator());
@@ -214,6 +239,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _watcher?.Dispose();
+        _desktopHotkey?.Dispose();
         _desktop?.Dispose();
         // Off the UI thread: waiting here for a task that needs the UI thread would deadlock.
         Task.Run(Orange.Core.Share.PhoneBridge.StopAsync).Wait(2000);

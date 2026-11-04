@@ -52,11 +52,13 @@ Prompt sugerido para cada sesión:
 
 > Notas: `UI/Desktop/BoxWindow` (ventana Win32 con `NativeWindow` + GDI, sin WPF), `DesktopLayer` (WorkerW dentro de Progman en 24H2+, o el WorkerW de nivel superior en builds viejos), `Engine/DesktopEngine` (aplica el layout activo una vez al arrancar si `DesktopModuleEnabled`) y `Engine/DesktopDiagnostics` (`--desktop-backup`, `--desktop-restore`, `--desktop-preview`). Prueba en la PC del usuario (build 26200) con un cajón por monitor y 12 íconos movidos desde el principal: el usuario vio los cajones en los dos modos y prefiere `Wallpaper` → **P1 resuelto**. Aplicar: 0,2 s. RAM privada: +3,4 MB (Wallpaper) / +3,1 MB (Frame); el working set sube ~20 MB, sobre todo DLL de shell compartidas. Respaldo → vista previa → restauración devolvió los 184 íconos a su posición exacta. Sin probar: P5 (Win+D) y abrir íconos con doble clic dentro del cajón (confirmar en T5).
 
-## [ ] T5 — Modo edición
+## [x] T5 — Modo edición
 - `EditOverlay` según SPEC §10: crear, mover (también entre monitores), redimensionar, renombrar, color, orden, mover a monitor N, borrar. Atajo global.
 - Textos con `Loc.T` + traducciones es/pt.
 
 **Aceptación (manual):** crear un cajón en cada monitor sin tocar el JSON; los íconos siguen al cajón; borrar un cajón deja sus íconos libres y ningún archivo cambia.
+
+> Notas: `UI/Desktop/EditSession` (barra con "+ Nuevo cajón"/"Listo", menú ⋯ o clic derecho: renombrar, 8 colores, orden, regla de extensiones, mover a monitor N, borrar), `EditBoxWindow` (WPF + `WindowChrome`, semitransparente solo en edición, posición en píxeles físicos por HWND, guarda en `WM_EXITSIZEMOVE`), `HotkeyWindow` (`RegisterHotKey`, sin hook) y `Engine/Hotkey` (parser con pruebas). El motor ahora guarda la config en memoria (`SetLayout`, `ArrangeBox`, `AdoptFreeIcons`). Al pulsar "Listo", los íconos libres cuyo centro cae dentro de un cajón pasan a ser suyos (así se llena un cajón nuevo). `Orange.exe --desktop` activa el módulo solo en esa ejecución. Prueba manual del usuario con la versión de desarrollo: crear/mover/editar cajones y doble clic funcionan. Esperado hasta T6: un ícono arrastrado fuera del cajón no cambia de dueño y vuelve a su lugar al reaplicar. P5 (Win+D) sin confirmar explícitamente.
 
 ## [ ] T6 — Automatización por eventos
 - Tabla de eventos de SPEC §11: `FileSystemWatcher` (usuario + público), aviso de "botón soltado sobre el escritorio" en `DragWatcher` (solo encolar), `WM_DISPLAYCHANGE`/área de trabajo/DPI, `TaskbarCreated`, cambio de tamaño de íconos (P6).
