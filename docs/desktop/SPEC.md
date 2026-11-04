@@ -69,13 +69,14 @@ Reglas:
           "title": "Programas",
           "color": "#2B2B2B",               // fondo sólido
           "titleColor": "#FFFFFF",
-          "monitor": "\\\\?\\DISPLAY#DEL41A8#...", // MonitorKey (§6)
+          "monitor": { "id": "\\\\?\\DISPLAY#DEL41A8#...", "name": "DELL U2419H" }, // MonitorKey (§6)
           "rect": { "x": 0.02, "y": 0.05, "w": 0.20, "h": 0.40 }, // fracciones del área de trabajo del monitor
           "sort": "Name",                   // Name | Type | Manual
           "items": ["Visual Studio Code.lnk", "Orange.lnk"],     // nombres de ítem (§8)
-          "rules": [ { "kind": "Extension", "value": ".lnk" } ]
+          "rules": [ { "kind": "Extension", "value": ".lnk" } ] // Extension | NameContains | Kind | Regex
         }
-      ]
+      ],
+      "looseItems": ["Nota.txt"]          // sacados a mano de un cajón (§7)
     }
   ]
 }

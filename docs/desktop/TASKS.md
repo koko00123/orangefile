@@ -15,12 +15,14 @@ Prompt sugerido para cada sesión:
 
 > Notas: `Orange.Tests` (xUnit 2.5.3, UseWPF/UseWindowsForms como Orange) + `Orange.sln`. `InternalsVisibleTo("Orange.Tests")` en `Orange.csproj`. `dotnet publish` de `Orange.csproj` (lo que usa `build.ps1`) no incluye ensamblados de pruebas.
 
-## [ ] T1 — Modelo + almacenamiento
+## [x] T1 — Modelo + almacenamiento
 - `Orange/Desktop/Model/*` según SPEC §5 (records inmutables; reglas polimórficas con `[JsonPolymorphic]` + `"kind"`).
 - `DesktopStore`: cargar/guardar `%LOCALAPPDATA%\Orange\desktop.json`, guardado atómico, archivo corrupto → `desktop.json.bad` + config vacía.
 - `Settings.DesktopModuleEnabled` (`false`), `DesktopRenderMode` (`Wallpaper`), `DesktopOrphanBoxes` (`Hide`), `DesktopEditHotkey` (`Ctrl+Alt+D`).
 
 **Aceptación:** prueba de ida y vuelta JSON con todos los tipos de regla y 3 monitores; archivo corrupto no lanza excepción.
+
+> Notas: `Orange/Desktop/Model/DesktopConfig.cs` (records + reglas polimórficas por `"kind"`, todas con `value`) y `Store/DesktopStore.cs` (camelCase, `.tmp` + `File.Move`, corrupto → `.bad`). `Sanitize` repara nulos, ids repetidos, rects fuera de rango y ítems en dos cajones (gana el primero). El monitor se guarda como objeto `{id, name}` (SPEC §5 actualizado). El log se inyecta para que las pruebas no escriban en el log real.
 
 ## [ ] T2 — Lógica de distribución (pura, sin Win32)
 - `MonitorMap`: fracciones ⇄ píxeles a partir de una lista de monitores `{ Key, WorkArea, Dpi }`; monitor que contiene un punto; cajones huérfanos según `DesktopOrphanBoxes`.
