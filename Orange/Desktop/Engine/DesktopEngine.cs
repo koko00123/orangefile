@@ -63,6 +63,7 @@ internal sealed class DesktopEngine : IDisposable
         HideBoxes();
         var layout = Config.Active;
         if (layout is null || layout.Boxes.Count == 0) return;
+        if (!_icons.IconsVisible()) return;   // "Hide desktop icons" hides the boxes too
 
         if (_icons.EnsureFreePositioning())
             JobRunner.Log("Desktop: turned off auto arrange / align to grid");
@@ -94,7 +95,7 @@ internal sealed class DesktopEngine : IDisposable
     public void Refresh(bool userDrop, IReadOnlyList<(string Old, string New)>? renames = null)
     {
         var start = Layout;
-        if (start.Boxes.Count == 0) return;
+        if (start.Boxes.Count == 0 || !_icons.IconsVisible()) return;
 
         var onDesktop = ItemsByName();
         var map = Map();
@@ -129,6 +130,36 @@ internal sealed class DesktopEngine : IDisposable
         }
         if (moves.Count > 0) _icons.SetPositions(moves);
         _seen = Snapshot(onDesktop, moves);
+    }
+
+    // ── Layouts and hiding (T7) ──────────────────────────────────────────
+
+    public IReadOnlyList<DesktopLayout> Layouts => Config.Layouts;
+
+    /// <summary>Applies a layout change from <see cref="LayoutOps"/>; false when it was refused.</summary>
+    public bool Change(DesktopConfig? changed, bool redraw)
+    {
+        if (changed is null) return false;
+        Config = DesktopStore.Sanitize(changed);
+        _store.Save(Config);
+        if (redraw) Safe(Apply, "apply the layout");
+        return true;
+    }
+
+    public bool IconsHidden => !_icons.IconsVisible();
+
+    public void SetIconsHidden(bool hidden)
+    {
+        if (hidden)
+        {
+            HideBoxes();
+            _icons.SetIconsVisible(false);
+        }
+        else
+        {
+            _icons.SetIconsVisible(true);
+            Safe(Apply, "show the boxes again");
+        }
     }
 
     /// <summary>Drops the cached shell view (Explorer restarted) so the next call reconnects.</summary>

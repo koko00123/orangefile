@@ -22,6 +22,9 @@ public sealed record DesktopLayout
     public string Name { get; init; } = "";
     public IReadOnlyList<Box> Boxes { get; init; } = [];
 
+    /// <summary>Optional global shortcut that switches to this layout ("" = none).</summary>
+    public string Hotkey { get; init; } = "";
+
     /// <summary>Items the user pulled out of a box on purpose, so rules must not put them back.</summary>
     public IReadOnlyList<string> LooseItems { get; init; } = [];
 }

@@ -109,7 +109,7 @@ public sealed class DesktopStore
 
         var loose = (l.LooseItems ?? []).Where(i => !string.IsNullOrEmpty(i) && !taken.Contains(i))
             .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        return l with { Boxes = boxes, LooseItems = loose };
+        return l with { Boxes = boxes, LooseItems = loose, Hotkey = l.Hotkey ?? "" };
     }
 
     private static string NewUniqueId(HashSet<string> ids)

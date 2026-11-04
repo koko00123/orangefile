@@ -68,11 +68,13 @@ Prompt sugerido para cada sesión:
 
 > Notas: `UI/Desktop/DesktopEvents` (FileSystemWatcher en escritorio del usuario y público, ventana oculta de nivel superior para `WM_DISPLAYCHANGE`/`SPI_SETWORKAREA`/`TaskbarCreated`, debounce 700 ms / 300 ms / 1 s / 2 s, en pausa durante el modo edición). `DragWatcher.LeftButtonUp` solo encola si hay suscriptor; el módulo comprueba que se soltó sobre `SysListView32` dentro de `SHELLDLL_DefView`. `DesktopEngine.Refresh` es incremental: renombres conservan cajón (`Membership.Rename`), solo los íconos cuya posición cambió desde la última vez (`Membership.Moved`) pueden cambiar de cajón (así el overflow no parece un arrastre), un archivo nuevo soltado sobre un cajón entra en él, reglas para los libres, y solo se mueven los íconos fuera de lugar. Medición en reposo, 60 s: 688 ms de CPU con el módulo vs 422 ms sin él (≈0,02 % del procesador, probablemente clics del usuario), +3 MB de RAM privada. El usuario confirmó que funciona (arrastrar dentro/fuera, regla, reinicio de Explorer). P6 (Ctrl+rueda) solo se detecta en el siguiente evento: `TODO(verify)` en `Refresh`.
 
-## [ ] T7 — Layouts y ocultar
+## [x] T7 — Layouts y ocultar
 - Guardar layout actual con nombre, cambiar de layout, borrar layout. Menú de bandeja "Layout ▸" y atajo opcional por layout.
 - "Ocultar íconos del escritorio": oculta íconos y cajones; volver a mostrar restaura todo.
 
 **Aceptación (manual):** dos layouts distintos (ej. Casa / Trabajo) se alternan sin perder íconos; ocultar/mostrar funciona en los 3 monitores.
+
+> Notas: `LayoutOps` (funciones puras: cambiar, guardar como, renombrar, borrar —nunca el último—, atajo único por layout) con pruebas en `LayoutOpsTests`. `HotkeyWindow` admite varios ids (editar=1, ocultar=2, layouts=100+i). Menú de bandeja: Editar escritorio, Distribución ▸, Ocultar íconos del escritorio. Ocultar usa `WM_COMMAND 0x7402` a SHELLDLL_DefView (el mismo comando de Explorer) y esconde los cajones; `Apply` se salta mientras los íconos están ocultos. `DesktopHideHotkey` vacío por defecto (solo menú). 61 pruebas OK.
 
 ## [ ] T8 — Ajustes, README y pulido
 - Sección "Escritorio" en `SettingsWindow` (SPEC §12).

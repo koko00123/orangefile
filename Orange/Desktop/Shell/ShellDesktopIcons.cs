@@ -99,6 +99,18 @@ internal sealed class ShellDesktopIcons : IDesktopIcons
             ListOrigin(), new PixelSize(s.X, s.Y), new PixelSize(d.X, d.Y));
     });
 
+    public bool IconsVisible() => WithView(() => _listView == IntPtr.Zero || IsWindowVisible(_listView));
+
+    public void SetIconsVisible(bool visible) => WithView(() =>
+    {
+        if (_listView == IntPtr.Zero || IsWindowVisible(_listView) == visible) return true;
+        // The desktop's "Show desktop icons" command is a toggle; only send it when the state differs.
+        SendMessage(GetParent(_listView), WM_COMMAND, new IntPtr(ToggleDesktopIcons), IntPtr.Zero);
+        return true;
+    });
+
+    private const int ToggleDesktopIcons = 0x7402;
+
     public void Reset() => Release();
 
     public void Dispose() => Release();

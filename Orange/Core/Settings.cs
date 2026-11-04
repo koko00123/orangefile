@@ -43,6 +43,8 @@ public sealed class Settings
     public DesktopRenderMode DesktopRenderMode { get; set; } = DesktopRenderMode.Wallpaper;
     public DesktopOrphanBoxes DesktopOrphanBoxes { get; set; } = DesktopOrphanBoxes.Hide;
     public string DesktopEditHotkey { get; set; } = "Ctrl+Alt+D";
+    /// <summary>Hides/shows every desktop icon and box. Empty = no shortcut (tray menu only).</summary>
+    public string DesktopHideHotkey { get; set; } = "";
 
     // Phone sharing ("AirDrop" over Wi-Fi)
     public bool PhoneSharing { get; set; } = true;
@@ -122,6 +124,7 @@ public sealed class Settings
         if (!Loc.Languages.ContainsKey(s.Language)) s.Language = "en";
         if (s.DragSourceApps is not { Count: > 0 }) s.DragSourceApps = ["explorer.exe"];
         if (string.IsNullOrWhiteSpace(s.DesktopEditHotkey)) s.DesktopEditHotkey = "Ctrl+Alt+D";
+        s.DesktopHideHotkey ??= "";
         // Every mode needs its own key; fall back to the defaults if two collide.
         if (s.ConvertKey == s.ToolsKey || s.ToolsKey == s.ActionsKey || s.ConvertKey == s.ActionsKey)
             (s.ConvertKey, s.ToolsKey, s.ActionsKey) = (ModKey.Shift, ModKey.Ctrl, ModKey.Alt);

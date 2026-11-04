@@ -19,6 +19,12 @@ public interface IDesktopIcons : IDisposable
     /// <summary>Puts "Auto arrange" and "Align to grid" back as they were (used by diagnostics).</summary>
     void RestoreArrangement(DesktopViewInfo before);
 
+    /// <summary>Whether Explorer shows the desktop icons ("View → Show desktop icons").</summary>
+    bool IconsVisible();
+
+    /// <summary>Shows or hides all desktop icons, like the desktop's own View menu.</summary>
+    void SetIconsVisible(bool visible);
+
     /// <summary>Forgets the cached shell view; the next call reconnects (after an Explorer restart).</summary>
     void Reset();
 

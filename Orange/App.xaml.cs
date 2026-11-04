@@ -104,9 +104,106 @@ public partial class App : Application
         if (_watcher is not null) _watcher.LeftButtonUp += _desktopEvents.OnLeftButtonUp;
 
         _desktopHotkey = new Orange.UI.Desktop.HotkeyWindow();
-        _desktopHotkey.Pressed += ToggleDesktopEdit;
-        _desktopHotkey.Register(Settings.Current.DesktopEditHotkey);
+        _desktopHotkey.Pressed += OnDesktopHotkey;
+        RegisterDesktopHotkeys();
         BuildTrayMenu();
+    }
+
+    // Hotkey ids: edit mode, hide icons, then one per layout (by position in the list).
+    private const int HotkeyEdit = 1, HotkeyHide = 2, HotkeyLayoutBase = 100;
+
+    private void RegisterDesktopHotkeys()
+    {
+        if (_desktopHotkey is null || _desktop is null) return;
+        _desktopHotkey.Register(HotkeyEdit, Settings.Current.DesktopEditHotkey);
+        _desktopHotkey.Register(HotkeyHide, Settings.Current.DesktopHideHotkey);
+        _desktopHotkey.UnregisterWhere(id => id >= HotkeyLayoutBase);
+        var layouts = _desktop.Layouts;
+        for (int i = 0; i < layouts.Count; i++)
+            if (!string.IsNullOrEmpty(layouts[i].Hotkey)) _desktopHotkey.Register(HotkeyLayoutBase + i, layouts[i].Hotkey);
+    }
+
+    private void OnDesktopHotkey(int id)
+    {
+        if (_desktop is null) return;
+        if (id == HotkeyEdit) ToggleDesktopEdit();
+        else if (id == HotkeyHide) ToggleDesktopIcons();
+        else if (id >= HotkeyLayoutBase && id - HotkeyLayoutBase < _desktop.Layouts.Count)
+            ChangeLayouts(c => Orange.Desktop.Layout.LayoutOps.Switch(c, _desktop.Layouts[id - HotkeyLayoutBase].Name));
+    }
+
+    private void ToggleDesktopIcons()
+    {
+        if (_desktop is null) return;
+        if (_desktopEdit is { IsOpen: true }) _desktopEdit.Close();
+        try { _desktop.SetIconsHidden(!_desktop.IconsHidden); }
+        catch (Exception ex) { JobRunner.Log($"Desktop: could not hide/show icons: {ex.Message}"); }
+        BuildTrayMenu();
+    }
+
+    /// <summary>Applies a layout operation; closes edit mode first so it never edits the wrong layout.</summary>
+    private bool ChangeLayouts(Func<Orange.Desktop.Model.DesktopConfig, Orange.Desktop.Model.DesktopConfig?> op, bool redraw = true)
+    {
+        if (_desktop is null) return false;
+        if (_desktopEdit is { IsOpen: true }) _desktopEdit.Close();
+        bool ok = _desktop.Change(op(_desktop.Config), redraw);
+        RegisterDesktopHotkeys();
+        BuildTrayMenu();
+        return ok;
+    }
+
+    private Forms.ToolStripMenuItem BuildLayoutMenu()
+    {
+        var desktop = _desktop!;
+        var root = new Forms.ToolStripMenuItem(Loc.T("Layout"));
+        var active = desktop.Layout.Name;
+        foreach (var layout in desktop.Layouts)
+        {
+            var name = layout.Name;
+            var item = new Forms.ToolStripMenuItem(name, null, (_, _) => ChangeLayouts(c => Orange.Desktop.Layout.LayoutOps.Switch(c, name)))
+            {
+                Checked = name == active,
+                ShortcutKeyDisplayString = layout.Hotkey,
+            };
+            root.DropDownItems.Add(item);
+        }
+        if (desktop.Layouts.Count > 0) root.DropDownItems.Add(new Forms.ToolStripSeparator());
+
+        root.DropDownItems.Add(Loc.T("Save as new layout…"), null, (_, _) =>
+        {
+            var name = PromptWindow.Ask("New layout", "Layout name:");
+            if (name is not null && !ChangeLayouts(c => Orange.Desktop.Layout.LayoutOps.SaveAs(c, name), redraw: false))
+                Notify("Orange", Loc.T("That name is already used."), error: true);
+        });
+        if (desktop.Layouts.Count > 0)
+        {
+            root.DropDownItems.Add(Loc.T("Rename layout…"), null, (_, _) =>
+            {
+                var name = PromptWindow.Ask("Rename layout", "Layout name:", active);
+                if (name is not null && !ChangeLayouts(c => Orange.Desktop.Layout.LayoutOps.Rename(c, active, name), redraw: false))
+                    Notify("Orange", Loc.T("That name is already used."), error: true);
+            });
+            root.DropDownItems.Add(Loc.T("Layout shortcut…"), null, (_, _) =>
+            {
+                var key = PromptWindow.Ask("Layout shortcut", Loc.F("Shortcut for \"{0}\" (e.g. Ctrl+Alt+1):", active), desktop.Layout.Hotkey);
+                if (key is null) return;
+                if (!ChangeLayouts(c => Orange.Desktop.Layout.LayoutOps.SetHotkey(c, active, key), redraw: false))
+                    Notify("Orange", Loc.T("That shortcut is not valid. Use something like Ctrl+Alt+1."), error: true);
+            });
+            if (!string.IsNullOrEmpty(desktop.Layout.Hotkey))
+                root.DropDownItems.Add(Loc.T("Remove shortcut"), null, (_, _) =>
+                    ChangeLayouts(c => Orange.Desktop.Layout.LayoutOps.SetHotkey(c, active, ""), redraw: false));
+        }
+        if (desktop.Layouts.Count > 1)
+        {
+            root.DropDownItems.Add(Loc.T("Delete layout"), null, (_, _) =>
+            {
+                var answer = MessageBox.Show(Loc.F("Delete the layout \"{0}\"? Its boxes are removed; icons stay on the desktop.", active),
+                    "Orange", MessageBoxButton.OKCancel, MessageBoxImage.Question);
+                if (answer == MessageBoxResult.OK) ChangeLayouts(c => Orange.Desktop.Layout.LayoutOps.Delete(c, active));
+            });
+        }
+        return root;
     }
 
     /// <summary>Enters or leaves edit mode (tray menu and hotkey).</summary>
@@ -203,7 +300,22 @@ public partial class App : Application
         menu.Items.Add(Loc.T("Convert files…"), null, (_, _) => PickAndShowMenu());
         menu.Items.Add(Loc.T("Connect phone…"), null, (_, _) => PairWindow.ShowSingle());
         if (_desktop is not null)
-            menu.Items.Add($"{Loc.T("Edit desktop")}	{Settings.Current.DesktopEditHotkey}", null, (_, _) => ToggleDesktopEdit());
+        {
+            menu.Items.Add(new Forms.ToolStripSeparator());
+            menu.Items.Add(new Forms.ToolStripMenuItem(Loc.T("Edit desktop"), null, (_, _) => ToggleDesktopEdit())
+            {
+                ShortcutKeyDisplayString = Settings.Current.DesktopEditHotkey,
+            });
+            menu.Items.Add(BuildLayoutMenu());
+            bool hidden = false;
+            try { hidden = _desktop.IconsHidden; } catch { }
+            menu.Items.Add(new Forms.ToolStripMenuItem(Loc.T("Hide desktop icons"), null, (_, _) => ToggleDesktopIcons())
+            {
+                Checked = hidden,
+                ShortcutKeyDisplayString = Settings.Current.DesktopHideHotkey,
+            });
+            menu.Items.Add(new Forms.ToolStripSeparator());
+        }
         menu.Items.Add(Loc.T("Settings…"), null, (_, _) => SettingsWindow.ShowSingle());
         menu.Items.Add(Loc.T("Open output log"), null, (_, _) => JobRunner.OpenLog());
         menu.Items.Add(new Forms.ToolStripSeparator());

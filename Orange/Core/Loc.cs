@@ -50,6 +50,15 @@ public static class Loc
             ["Remove rules"] = "Quitar reglas", ["Move to monitor"] = "Mover al monitor", ["Delete box"] = "Borrar cajón",
             ["Delete the box \"{0}\"? Its icons stay on the desktop."] = "¿Borrar el cajón «{0}»? Sus íconos se quedan en el escritorio.",
             ["{0} icons"] = "{0} íconos", ["Place the box over icons and press Done"] = "Coloca el cajón sobre íconos y pulsa Listo",
+            ["Layout"] = "Distribución", ["Save as new layout…"] = "Guardar como nueva distribución…", ["New layout"] = "Nueva distribución",
+            ["Layout name:"] = "Nombre de la distribución:", ["That name is already used."] = "Ese nombre ya está en uso.",
+            ["Rename layout…"] = "Renombrar distribución…", ["Rename layout"] = "Renombrar distribución",
+            ["Layout shortcut…"] = "Atajo de la distribución…", ["Layout shortcut"] = "Atajo de la distribución",
+            ["Shortcut for \"{0}\" (e.g. Ctrl+Alt+1):"] = "Atajo para «{0}» (ej. Ctrl+Alt+1):",
+            ["That shortcut is not valid. Use something like Ctrl+Alt+1."] = "Ese atajo no es válido. Usa algo como Ctrl+Alt+1.",
+            ["Remove shortcut"] = "Quitar atajo", ["Delete layout"] = "Borrar distribución",
+            ["Delete the layout \"{0}\"? Its boxes are removed; icons stay on the desktop."] = "¿Borrar la distribución «{0}»? Se quitan sus cajones; los íconos se quedan en el escritorio.",
+            ["Hide desktop icons"] = "Ocultar íconos del escritorio",
 
             // Notifications
             ["Done"] = "Listo", ["{0} files done"] = "{0} archivos listos", ["{0}: {1} failed"] = "{0}: {1} con error",
@@ -211,6 +220,15 @@ public static class Loc
             ["Remove rules"] = "Remover regras", ["Move to monitor"] = "Mover para o monitor", ["Delete box"] = "Excluir caixa",
             ["Delete the box \"{0}\"? Its icons stay on the desktop."] = "Excluir a caixa \"{0}\"? Os ícones continuam na área de trabalho.",
             ["{0} icons"] = "{0} ícones", ["Place the box over icons and press Done"] = "Coloque a caixa sobre ícones e pressione Pronto",
+            ["Layout"] = "Layout", ["Save as new layout…"] = "Salvar como novo layout…", ["New layout"] = "Novo layout",
+            ["Layout name:"] = "Nome do layout:", ["That name is already used."] = "Esse nome já está em uso.",
+            ["Rename layout…"] = "Renomear layout…", ["Rename layout"] = "Renomear layout",
+            ["Layout shortcut…"] = "Atalho do layout…", ["Layout shortcut"] = "Atalho do layout",
+            ["Shortcut for \"{0}\" (e.g. Ctrl+Alt+1):"] = "Atalho para \"{0}\" (ex. Ctrl+Alt+1):",
+            ["That shortcut is not valid. Use something like Ctrl+Alt+1."] = "Esse atalho não é válido. Use algo como Ctrl+Alt+1.",
+            ["Remove shortcut"] = "Remover atalho", ["Delete layout"] = "Excluir layout",
+            ["Delete the layout \"{0}\"? Its boxes are removed; icons stay on the desktop."] = "Excluir o layout \"{0}\"? As caixas são removidas; os ícones continuam na área de trabalho.",
+            ["Hide desktop icons"] = "Ocultar ícones da área de trabalho",
 
             // Notifications
             ["Done"] = "Pronto", ["{0} files done"] = "{0} arquivos prontos", ["{0}: {1} failed"] = "{0}: {1} com erro",

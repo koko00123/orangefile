@@ -218,6 +218,13 @@ internal static class Native
     public const uint MOD_NOREPEAT = 0x4000;
 
     public const int WM_DISPLAYCHANGE = 0x007E, WM_SETTINGCHANGE = 0x001A;
+    public const int WM_COMMAND = 0x0111;
+
+    [DllImport("user32.dll")]
+    public static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
     public const int SPI_SETWORKAREA = 0x002F;
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
