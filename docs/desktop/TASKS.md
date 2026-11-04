@@ -24,13 +24,15 @@ Prompt sugerido para cada sesión:
 
 > Notas: `Orange/Desktop/Model/DesktopConfig.cs` (records + reglas polimórficas por `"kind"`, todas con `value`) y `Store/DesktopStore.cs` (camelCase, `.tmp` + `File.Move`, corrupto → `.bad`). `Sanitize` repara nulos, ids repetidos, rects fuera de rango y ítems en dos cajones (gana el primero). El monitor se guarda como objeto `{id, name}` (SPEC §5 actualizado). El log se inyecta para que las pruebas no escriban en el log real.
 
-## [ ] T2 — Lógica de distribución (pura, sin Win32)
+## [x] T2 — Lógica de distribución (pura, sin Win32)
 - `MonitorMap`: fracciones ⇄ píxeles a partir de una lista de monitores `{ Key, WorkArea, Dpi }`; monitor que contiene un punto; cajones huérfanos según `DesktopOrphanBoxes`.
 - `BoxLayout.Place(box rect, cellSize, items, sort) → posiciones + overflow`.
 - `Membership.FromPositions(...)`: qué cajón contiene cada ítem (por el centro del ícono).
 - `RuleMatcher` según SPEC §7, respetando `looseItems`.
 
 **Aceptación:** pruebas con 3 monitores sintéticos, incluido uno con coordenadas negativas y escalas 100 % / 125 % / 150 %; cajón lleno → overflow correcto; monitor ausente → cajón oculto (o movido al principal con la otra opción); reglas en orden y con regex con timeout.
+
+> Notas: `Orange/Desktop/Layout/` — `Geometry` (píxeles físicos de pantalla virtual), `MonitorMap` (numeración izquierda→derecha, fracciones ⇄ píxeles, monitor por centro o el más cercano, huérfanos), `BoxLayout` (cuadrícula centrada bajo el título, orden natural / por tipo / manual, overflow), `Membership` (`FromPositions` por centro del ícono; `Reassign` aplica arrastres y marca `looseItems`), `RuleMatcher` (primer cajón que coincide; regex cacheada con 50 ms). Se asume que la posición del ítem es su esquina superior izquierda y que la celda es `GetSpacing`: confirmar en T3 (P2).
 
 ## [ ] T3 — Acceso al escritorio (Shell COM)
 - `IDesktopIcons` + `ShellDesktopIcons` según SPEC §8: listar ítems (nombre, posición), `GetSpacing`, posicionar por lotes, desactivar auto-organizar/alinear a cuadrícula, reconectar si Explorer se reinicia.
