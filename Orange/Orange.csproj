@@ -20,6 +20,11 @@
     <Copyright>© 2026 koko</Copyright>
   </PropertyGroup>
 
+  <!-- Tests reach internal types (models, layout logic) without making them public. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Orange.Tests" />
+  </ItemGroup>
+
   <!-- WinForms is only used for the tray icon; keep its names out of the global scope. -->
   <ItemGroup>
     <Using Remove="System.Windows.Forms" />

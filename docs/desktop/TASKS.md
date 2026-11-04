@@ -8,10 +8,12 @@ Prompt sugerido para cada sesión:
 
 ---
 
-## [ ] T0 — Proyecto de pruebas
+## [x] T0 — Proyecto de pruebas
 - Crear `Orange.Tests` (xUnit, `net8.0-windows10.0.19041.0`) que referencia `Orange`. Crear `Orange.sln` en la raíz con ambos proyectos.
 
 **Aceptación:** `dotnet test` corre (aunque solo haya una prueba trivial). `build.ps1` sigue funcionando y no empaqueta el proyecto de pruebas.
+
+> Notas: `Orange.Tests` (xUnit 2.5.3, UseWPF/UseWindowsForms como Orange) + `Orange.sln`. `InternalsVisibleTo("Orange.Tests")` en `Orange.csproj`. `dotnet publish` de `Orange.csproj` (lo que usa `build.ps1`) no incluye ensamblados de pruebas.
 
 ## [ ] T1 — Modelo + almacenamiento
 - `Orange/Desktop/Model/*` según SPEC §5 (records inmutables; reglas polimórficas con `[JsonPolymorphic]` + `"kind"`).
