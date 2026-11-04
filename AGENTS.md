@@ -17,14 +17,15 @@ Ver `README.md` para qué hace y cómo compilar.
 - Todo P/Invoke nuevo va en `Orange/Input/Native.cs`.
 - Orange se reinicia sin privilegios si arranca como administrador (ver `App.OnStartup`, UIPI y arrastrar desde Explorer). No cambiar ese comportamiento sin que la especificación lo pida.
 
-## Trabajo en curso: módulo "Mouse" (reemplazo de X-Mouse Button Control)
-Especificación completa en `docs/mouse/`:
-1. `docs/mouse/SPEC.md` — qué construir y arquitectura.
-2. `docs/mouse/XMBC-FORMAT.md` — formato del archivo de X-Mouse a importar.
-3. `docs/mouse/TASKS.md` — tareas en orden, con criterios de aceptación.
+## Trabajo en curso: módulo "Escritorio" (cajones de íconos)
+Especificación completa en `docs/desktop/`:
+1. `docs/desktop/SPEC.md` — qué construir y arquitectura.
+2. `docs/desktop/TASKS.md` — tareas en orden, con criterios de aceptación.
 
 Reglas para este trabajo:
 - Hacer **una tarea de `TASKS.md` por vez**, en orden. No adelantar tareas.
 - Al terminar una tarea: compilar (`dotnet build`), correr pruebas (`dotnet test`), y marcarla como hecha en `TASKS.md` con una línea de notas.
 - Si algo de la especificación es ambiguo o está en "Pendiente de verificar", **no inventar**: implementar detrás de una opción configurable o dejar `// TODO(verify):` y anotarlo en `TASKS.md`.
-- El repositorio es público: **nunca** copiar al repo el perfil real del usuario (`*.xmbcp`, `XMBCSettings.xml`) ni rutas personales. Las pruebas con el archivo real lo leen desde la variable de entorno `ORANGE_XMBC_FIXTURE` y se saltan si no existe.
+- Prioridad del módulo: poca RAM y 0 % de CPU en reposo. Nada de temporizadores ni sondeo; solo eventos.
+- Nunca borrar, mover ni renombrar archivos del usuario: el módulo solo cambia posiciones de íconos.
+- El repositorio es público: nunca copiar al repo nombres de archivos del escritorio del usuario ni rutas personales.
