@@ -18,6 +18,9 @@ public sealed class DragWatcher : IDisposable
     public event Action? CancelRequested;
     public event Action<int, int>? MouseDown;
 
+    /// <summary>Left button released anywhere (the Desktop module checks whether an icon was dropped).</summary>
+    public event Action<int, int>? LeftButtonUp;
+
     private readonly Native.HookProc _mouseProc;
     private readonly Native.HookProc _keyProc;
     private readonly Dispatcher _dispatcher;
@@ -78,6 +81,8 @@ public sealed class DragWatcher : IDisposable
                     _buttonDown = _dragging = _wheelShown = false;
                     _lastMode = null;
                     if (wasDragging) Post(() => DragEnded?.Invoke());
+                    // Only queued when someone listens, so the hook stays free when the module is off.
+                    if (LeftButtonUp is { } up) Post(() => up(info.pt.X, info.pt.Y));
                     break;
             }
         }

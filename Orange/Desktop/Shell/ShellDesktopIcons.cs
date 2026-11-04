@@ -99,6 +99,8 @@ internal sealed class ShellDesktopIcons : IDesktopIcons
             ListOrigin(), new PixelSize(s.X, s.Y), new PixelSize(d.X, d.Y));
     });
 
+    public void Reset() => Release();
+
     public void Dispose() => Release();
 
     // ── Plumbing ─────────────────────────────────────────────────────────

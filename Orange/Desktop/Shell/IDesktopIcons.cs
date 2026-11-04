@@ -19,6 +19,9 @@ public interface IDesktopIcons : IDisposable
     /// <summary>Puts "Auto arrange" and "Align to grid" back as they were (used by diagnostics).</summary>
     void RestoreArrangement(DesktopViewInfo before);
 
+    /// <summary>Forgets the cached shell view; the next call reconnects (after an Explorer restart).</summary>
+    void Reset();
+
     /// <summary>Details for diagnostics: flags, window origin.</summary>
     DesktopViewInfo GetViewInfo();
 }

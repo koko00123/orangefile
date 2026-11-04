@@ -217,6 +217,24 @@ internal static class Native
     public const int WM_EXITSIZEMOVE = 0x0232, WM_HOTKEY = 0x0312;
     public const uint MOD_NOREPEAT = 0x4000;
 
+    public const int WM_DISPLAYCHANGE = 0x007E, WM_SETTINGCHANGE = 0x001A;
+    public const int SPI_SETWORKAREA = 0x002F;
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern uint RegisterWindowMessage(string name);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder name, int max);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetParent(IntPtr hWnd);
+
+    public static string ClassOf(IntPtr hWnd)
+    {
+        var sb = new System.Text.StringBuilder(64);
+        return hWnd != IntPtr.Zero && GetClassName(hWnd, sb, sb.Capacity) > 0 ? sb.ToString() : "";
+    }
+
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool RegisterHotKey(IntPtr hWnd, int id, uint modifiers, uint vk);
 

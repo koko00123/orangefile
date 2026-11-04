@@ -47,6 +47,14 @@ internal sealed class BoxWindow : Forms.NativeWindow, IDisposable
 
     public string BoxId => _box.Id;
 
+    /// <summary>New title, color or overflow count: repaint only (same position).</summary>
+    public void Update(Box box, int overflow)
+    {
+        if (box == _box && overflow == _overflow) return;
+        (_box, _overflow) = (box, overflow);
+        if (Handle != IntPtr.Zero && IsWindow(Handle)) InvalidateRect(Handle, IntPtr.Zero, false);
+    }
+
     public static int TitleHeight(int dpi) => 28 * dpi / 96;
     public static int Padding(int dpi) => 4 * dpi / 96;
     private static int Border(int dpi) => Math.Max(2, 2 * dpi / 96);

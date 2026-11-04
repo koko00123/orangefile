@@ -207,6 +207,44 @@ public class MembershipTests
     }
 
     [Fact]
+    public void OnlyItemsWhosePositionChangedCountAsMoved()
+    {
+        var before = new Dictionary<string, PixelPoint>
+        {
+            ["still.txt"] = new(10, 10),
+            ["dragged.txt"] = new(110, 10),
+            ["overflow.txt"] = new(-500, 900),   // never fit in its box; must not look like a drag
+        };
+        var now = new List<DesktopItem>
+        {
+            new("still.txt", ItemKind.File, new(10, 10)),
+            new("dragged.txt", ItemKind.File, new(900, 400)),
+            new("overflow.txt", ItemKind.File, new(-500, 900)),
+            new("brandNew.txt", ItemKind.File, new(0, 0)),
+        };
+
+        Assert.Equal(["dragged.txt"], Membership.Moved(before, now).Select(i => i.Name));
+        Assert.Equal(["dragged.txt", "brandNew.txt"], Membership.Moved(before, now, includeNew: true).Select(i => i.Name));
+    }
+
+    [Fact]
+    public void RenameKeepsBoxAndLooseMarkAndFollowsChains()
+    {
+        var layout = new DesktopLayout
+        {
+            Name = "L",
+            LooseItems = ["old loose.txt"],
+            Boxes = [new Box { Id = "a", Items = ["keep.txt", "draft.docx"] }],
+        };
+
+        var result = Membership.Rename(layout, [("draft.docx", "v2.docx"), ("V2.DOCX", "final.docx"), ("old loose.txt", "new loose.txt")]);
+
+        Assert.Equal(["keep.txt", "final.docx"], result.Boxes[0].Items);
+        Assert.Equal(["new loose.txt"], result.LooseItems);
+        Assert.Same(layout, Membership.Rename(layout, []));
+    }
+
+    [Fact]
     public void ReassignWithoutChangesReturnsTheSameLayout()
     {
         var layout = new DesktopLayout { Name = "L", Boxes = [new Box { Id = "a", Items = ["x"] }] };

@@ -60,11 +60,13 @@ Prompt sugerido para cada sesión:
 
 > Notas: `UI/Desktop/EditSession` (barra con "+ Nuevo cajón"/"Listo", menú ⋯ o clic derecho: renombrar, 8 colores, orden, regla de extensiones, mover a monitor N, borrar), `EditBoxWindow` (WPF + `WindowChrome`, semitransparente solo en edición, posición en píxeles físicos por HWND, guarda en `WM_EXITSIZEMOVE`), `HotkeyWindow` (`RegisterHotKey`, sin hook) y `Engine/Hotkey` (parser con pruebas). El motor ahora guarda la config en memoria (`SetLayout`, `ArrangeBox`, `AdoptFreeIcons`). Al pulsar "Listo", los íconos libres cuyo centro cae dentro de un cajón pasan a ser suyos (así se llena un cajón nuevo). `Orange.exe --desktop` activa el módulo solo en esa ejecución. Prueba manual del usuario con la versión de desarrollo: crear/mover/editar cajones y doble clic funcionan. Esperado hasta T6: un ícono arrastrado fuera del cajón no cambia de dueño y vuelve a su lugar al reaplicar. P5 (Win+D) sin confirmar explícitamente.
 
-## [ ] T6 — Automatización por eventos
+## [x] T6 — Automatización por eventos
 - Tabla de eventos de SPEC §11: `FileSystemWatcher` (usuario + público), aviso de "botón soltado sobre el escritorio" en `DragWatcher` (solo encolar), `WM_DISPLAYCHANGE`/área de trabajo/DPI, `TaskbarCreated`, cambio de tamaño de íconos (P6).
 - Reglas aplicadas a ítems nuevos.
 
 **Aceptación (manual):** guardar un PDF en el escritorio → entra solo al cajón con regla `.pdf`; arrastrar un ícono a otro cajón → queda ahí y se reordena; reiniciar Explorer → todo vuelve a su lugar; desconectar un monitor y reconectarlo → sus cajones desaparecen y vuelven. CPU 0 % en reposo (Administrador de tareas, 1 minuto).
+
+> Notas: `UI/Desktop/DesktopEvents` (FileSystemWatcher en escritorio del usuario y público, ventana oculta de nivel superior para `WM_DISPLAYCHANGE`/`SPI_SETWORKAREA`/`TaskbarCreated`, debounce 700 ms / 300 ms / 1 s / 2 s, en pausa durante el modo edición). `DragWatcher.LeftButtonUp` solo encola si hay suscriptor; el módulo comprueba que se soltó sobre `SysListView32` dentro de `SHELLDLL_DefView`. `DesktopEngine.Refresh` es incremental: renombres conservan cajón (`Membership.Rename`), solo los íconos cuya posición cambió desde la última vez (`Membership.Moved`) pueden cambiar de cajón (así el overflow no parece un arrastre), un archivo nuevo soltado sobre un cajón entra en él, reglas para los libres, y solo se mueven los íconos fuera de lugar. Medición en reposo, 60 s: 688 ms de CPU con el módulo vs 422 ms sin él (≈0,02 % del procesador, probablemente clics del usuario), +3 MB de RAM privada. El usuario confirmó que funciona (arrastrar dentro/fuera, regla, reinicio de Explorer). P6 (Ctrl+rueda) solo se detecta en el siguiente evento: `TODO(verify)` en `Refresh`.
 
 ## [ ] T7 — Layouts y ocultar
 - Guardar layout actual con nombre, cambiar de layout, borrar layout. Menú de bandeja "Layout ▸" y atajo opcional por layout.

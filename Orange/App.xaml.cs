@@ -16,6 +16,7 @@ public partial class App : Application
     private Orange.Desktop.Engine.DesktopEngine? _desktop;
     private Orange.UI.Desktop.EditSession? _desktopEdit;
     private Orange.UI.Desktop.HotkeyWindow? _desktopHotkey;
+    private Orange.UI.Desktop.DesktopEvents? _desktopEvents;
 
     public static App Instance => (App)Current;
 
@@ -97,6 +98,10 @@ public partial class App : Application
         _desktop = new Orange.Desktop.Engine.DesktopEngine(new Orange.Desktop.Shell.ShellDesktopIcons(),
             new Orange.Desktop.Shell.Win32Monitors(), Orange.Desktop.Store.DesktopStore.Default());
         _desktop.Start();
+
+        _desktopEvents = new Orange.UI.Desktop.DesktopEvents(_desktop, () => _desktopEdit?.IsOpen == true);
+        _desktopEvents.Start();
+        if (_watcher is not null) _watcher.LeftButtonUp += _desktopEvents.OnLeftButtonUp;
 
         _desktopHotkey = new Orange.UI.Desktop.HotkeyWindow();
         _desktopHotkey.Pressed += ToggleDesktopEdit;
@@ -240,6 +245,7 @@ public partial class App : Application
     {
         _watcher?.Dispose();
         _desktopHotkey?.Dispose();
+        _desktopEvents?.Dispose();
         _desktop?.Dispose();
         // Off the UI thread: waiting here for a task that needs the UI thread would deadlock.
         Task.Run(Orange.Core.Share.PhoneBridge.StopAsync).Wait(2000);

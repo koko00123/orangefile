@@ -52,6 +52,33 @@ public static class Membership
         return layout with { Boxes = boxes, LooseItems = loose };
     }
 
+    /// <summary>
+    /// Items the user moved: their position differs from where Orange last saw or put them.
+    /// Items Orange never saw count as moved only when <paramref name="includeNew"/> is set.
+    /// Only these may change box on a drop, so icons that never fit (overflow) are not mistaken for drags.
+    /// </summary>
+    public static IReadOnlyList<DesktopItem> Moved(IReadOnlyDictionary<string, PixelPoint> before,
+        IReadOnlyList<DesktopItem> now, bool includeNew = false) =>
+        now.Where(i => before.TryGetValue(i.Name, out var p) ? p != i.Position : includeNew).ToList();
+
+    /// <summary>A file renamed on disk keeps its box (and its "loose" mark) under the new name.</summary>
+    public static DesktopLayout Rename(DesktopLayout layout, IReadOnlyList<(string Old, string New)> renames)
+    {
+        if (renames.Count == 0) return layout;
+        string Map(string name)
+        {
+            // Follow chains (a → b → c) in the order they happened.
+            foreach (var (o, n) in renames)
+                if (string.Equals(name, o, StringComparison.OrdinalIgnoreCase)) name = n;
+            return name;
+        }
+        return layout with
+        {
+            Boxes = layout.Boxes.Select(b => b with { Items = b.Items.Select(Map).ToList() }).ToList(),
+            LooseItems = layout.LooseItems.Select(Map).ToList(),
+        };
+    }
+
     /// <summary>Item name → id of the box that lists it.</summary>
     public static Dictionary<string, string> OwnerOf(DesktopLayout layout)
     {

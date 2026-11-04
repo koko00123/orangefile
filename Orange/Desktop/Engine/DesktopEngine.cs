@@ -9,7 +9,7 @@ namespace Orange.Desktop.Engine;
 
 /// <summary>
 /// Owns the desktop config, draws the boxes of the active layout and puts their icons inside.
-/// Runs on the UI thread. Events (new files, monitor changes, Explorer restarts) come in T6.
+/// Runs on the UI thread. <see cref="UI.Desktop.DesktopEvents"/> calls <see cref="Refresh"/> and <see cref="Apply"/>.
 /// </summary>
 internal sealed class DesktopEngine : IDisposable
 {
@@ -18,7 +18,11 @@ internal sealed class DesktopEngine : IDisposable
     private readonly IDesktopIcons _icons;
     private readonly IMonitors _monitors;
     private readonly DesktopStore _store;
-    private readonly List<BoxWindow> _windows = [];
+    private readonly Dictionary<string, BoxWindow> _windows = [];
+
+    // Where each icon was when Orange last looked or moved it: a different position later means the user dragged it.
+    private Dictionary<string, PixelPoint> _seen = new(StringComparer.OrdinalIgnoreCase);
+    private PixelSize _cell;
 
     public DesktopEngine(IDesktopIcons icons, IMonitors monitors, DesktopStore store)
     {
@@ -64,7 +68,7 @@ internal sealed class DesktopEngine : IDisposable
             JobRunner.Log("Desktop: turned off auto arrange / align to grid");
 
         var map = Map();
-        var cell = Cell();
+        var cell = _cell = Cell();
         var onDesktop = ItemsByName();
         var (mode, host, origin) = Host(Settings.Current.DesktopRenderMode);
         ActiveMode = mode;
@@ -75,16 +79,78 @@ internal sealed class DesktopEngine : IDisposable
             if (Place(box, map, cell, onDesktop) is not { } placed) continue;   // monitor not connected
             var (rect, dpi, placement) = placed;
             moves.AddRange(placement.Placed);
-            try { _windows.Add(new BoxWindow(mode, host, origin, box, rect, dpi, placement.Overflow.Count)); }
+            try { _windows[box.Id] = new BoxWindow(mode, host, origin, box, rect, dpi, placement.Overflow.Count); }
             catch (Exception ex) { JobRunner.Log($"Desktop: could not create box '{box.Title}': {ex.Message}"); }
         }
         IconsMoved = _icons.SetPositions(moves);
+        _seen = Snapshot(onDesktop, moves);
     }
+
+    /// <summary>
+    /// Catches up with what happened on the desktop without redrawing the boxes:
+    /// renamed files keep their box, icons the user dragged change box (when <paramref name="userDrop"/>),
+    /// free icons go through the rules, and only icons out of place are moved.
+    /// </summary>
+    public void Refresh(bool userDrop, IReadOnlyList<(string Old, string New)>? renames = null)
+    {
+        var start = Layout;
+        if (start.Boxes.Count == 0) return;
+
+        var onDesktop = ItemsByName();
+        var map = Map();
+        var cell = Cell();
+        if (cell != _cell)
+        {
+            // TODO(verify): P6 — icon size changed (Ctrl+wheel); the grid follows on the next event.
+            JobRunner.Log($"Desktop: icon spacing changed to {cell.W} × {cell.H}");
+            _cell = cell;
+        }
+
+        var layout = Membership.Rename(start, renames ?? []);
+        if (userDrop)
+        {
+            // New icons count too: a file dragged from an Explorer window onto a box joins it.
+            var moved = Membership.Moved(_seen, onDesktop.Values.ToList(), includeNew: true);
+            if (moved.Count > 0) layout = Membership.Reassign(layout, Membership.FromPositions(BoxRects(layout, map), moved, cell));
+        }
+
+        var owners = Membership.OwnerOf(layout);
+        var free = onDesktop.Values.Where(i => !owners.ContainsKey(i.Name)).ToList();
+        layout = RuleMatcher.AssignNew(layout, free);
+        if (!ReferenceEquals(layout, start)) SetLayout(layout);
+
+        var moves = new List<(string, PixelPoint)>();
+        foreach (var box in layout.Boxes)
+        {
+            if (Place(box, map, cell, onDesktop) is not { } placed) continue;
+            foreach (var (name, pos) in placed.Placement.Placed)
+                if (onDesktop[name].Position != pos) moves.Add((name, pos));
+            if (_windows.TryGetValue(box.Id, out var w)) w.Update(box, placed.Placement.Overflow.Count);
+        }
+        if (moves.Count > 0) _icons.SetPositions(moves);
+        _seen = Snapshot(onDesktop, moves);
+    }
+
+    /// <summary>Drops the cached shell view (Explorer restarted) so the next call reconnects.</summary>
+    public void Reconnect() => _icons.Reset();
+
+    private static Dictionary<string, PixelPoint> Snapshot(Dictionary<string, DesktopItem> items, List<(string Name, PixelPoint Pos)> moves)
+    {
+        var seen = items.ToDictionary(kv => kv.Key, kv => kv.Value.Position, StringComparer.OrdinalIgnoreCase);
+        foreach (var (name, pos) in moves) seen[name] = pos;
+        return seen;
+    }
+
+    private static List<(string, PixelRect)> BoxRects(DesktopLayout layout, MonitorMap map) => layout.Boxes
+        .Select(b => (b.Id, Rect: map.ToPixels(b)))
+        .Where(b => b.Rect is not null)
+        .Select(b => (b.Id, b.Rect!.Value))
+        .ToList();
 
     /// <summary>Removes the box backgrounds (icons stay where they are). Used while editing.</summary>
     public void HideBoxes()
     {
-        foreach (var w in _windows) w.Dispose();
+        foreach (var w in _windows.Values) w.Dispose();
         _windows.Clear();
     }
 
@@ -118,12 +184,7 @@ internal sealed class DesktopEngine : IDisposable
         var loose = new HashSet<string>(layout.LooseItems, StringComparer.OrdinalIgnoreCase);
         var free = ItemsByName().Values.Where(i => !owners.ContainsKey(i.Name) && !loose.Contains(i.Name)).ToList();
 
-        var rects = layout.Boxes
-            .Select(b => (b.Id, Rect: map.ToPixels(b)))
-            .Where(b => b.Rect is not null)
-            .Select(b => (b.Id, b.Rect!.Value))
-            .ToList();
-        var joined = Membership.FromPositions(rects, free, Cell())
+        var joined = Membership.FromPositions(BoxRects(layout, map), free, Cell())
             .Where(kv => kv.Value is not null)
             .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
         if (joined.Count > 0) SetLayout(Membership.Reassign(layout, joined));
