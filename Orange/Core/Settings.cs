@@ -7,6 +7,12 @@ public enum ModKey { Shift, Ctrl, Alt }
 
 public enum OutputMode { NextToOriginal, Folder }
 
+/// <summary>How desktop boxes are drawn: behind the icons (wallpaper layer) or as a frame with a hole.</summary>
+public enum DesktopRenderMode { Wallpaper, Frame }
+
+/// <summary>What happens to boxes whose monitor is not connected.</summary>
+public enum DesktopOrphanBoxes { Hide, MoveToPrimary }
+
 /// <summary>User preferences, stored as JSON in %LOCALAPPDATA%\Orange\settings.json.</summary>
 public sealed class Settings
 {
@@ -31,6 +37,12 @@ public sealed class Settings
 
     // Updates
     public bool AutoCheckUpdates { get; set; } = true;
+
+    // Desktop boxes (off by default; boxes themselves live in desktop.json)
+    public bool DesktopModuleEnabled { get; set; } = false;
+    public DesktopRenderMode DesktopRenderMode { get; set; } = DesktopRenderMode.Wallpaper;
+    public DesktopOrphanBoxes DesktopOrphanBoxes { get; set; } = DesktopOrphanBoxes.Hide;
+    public string DesktopEditHotkey { get; set; } = "Ctrl+Alt+D";
 
     // Phone sharing ("AirDrop" over Wi-Fi)
     public bool PhoneSharing { get; set; } = true;
@@ -109,6 +121,7 @@ public sealed class Settings
         if (s.PhoneToken.Length < 16) s.PhoneToken = NewToken();
         if (!Loc.Languages.ContainsKey(s.Language)) s.Language = "en";
         if (s.DragSourceApps is not { Count: > 0 }) s.DragSourceApps = ["explorer.exe"];
+        if (string.IsNullOrWhiteSpace(s.DesktopEditHotkey)) s.DesktopEditHotkey = "Ctrl+Alt+D";
         // Every mode needs its own key; fall back to the defaults if two collide.
         if (s.ConvertKey == s.ToolsKey || s.ToolsKey == s.ActionsKey || s.ConvertKey == s.ActionsKey)
             (s.ConvertKey, s.ToolsKey, s.ActionsKey) = (ModKey.Shift, ModKey.Ctrl, ModKey.Alt);
