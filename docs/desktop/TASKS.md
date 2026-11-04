@@ -43,12 +43,14 @@ Prompt sugerido para cada sesión:
 
 > Notas: COM y P/Invoke en `Native.cs`; `Desktop/Shell/` con `ShellDesktopIcons` (ShellWindows → IFolderView2, nombre por `SHGDN_INFOLDER|FORPARSING`, tipo por `SFGAO_*`, reconecta una vez si el proxy muere), `Win32Monitors` (clave = `monitorDevicePath` de QueryDisplayConfig) y `DesktopDump`. `--probe` también restaura los flags de organizar/alinear. Resultado en la PC del usuario (Win 11 26200, 3 monitores a 100 %, uno a la izquierda en X negativo): 3 monitores con nombre y ruta estable, 184 ítems; origen de la vista = origen de la pantalla virtual (-1280, 0); celda 94 × 114; sondeo en los 3 monitores con Δ = 0, 0 → **P2 y P3 resueltos** para escala 100 % (con escalas distintas por monitor queda sin probar). P4 sigue pendiente.
 
-## [ ] T4 — Dibujo de cajones
+## [x] T4 — Dibujo de cajones
 - `BoxWindow` en modos `Wallpaper` y `Frame` (SPEC §9). Si `Wallpaper` falla, registrar y caer a `Frame`.
 - `DesktopEngine` mínimo: al arrancar (si el módulo está activo), dibujar los cajones del layout activo y colocar sus íconos.
 - Integración en `App.OnStartup`.
 
 **Aceptación (manual):** con un `desktop.json` escrito a mano con un cajón por monitor, los 3 cajones aparecen en su monitor con sus íconos dentro; abrir y arrastrar íconos funciona normal. Anotar resultado de P1 y P5. Medir RAM antes/después (meta ≤ 8 MB extra).
+
+> Notas: `UI/Desktop/BoxWindow` (ventana Win32 con `NativeWindow` + GDI, sin WPF), `DesktopLayer` (WorkerW dentro de Progman en 24H2+, o el WorkerW de nivel superior en builds viejos), `Engine/DesktopEngine` (aplica el layout activo una vez al arrancar si `DesktopModuleEnabled`) y `Engine/DesktopDiagnostics` (`--desktop-backup`, `--desktop-restore`, `--desktop-preview`). Prueba en la PC del usuario (build 26200) con un cajón por monitor y 12 íconos movidos desde el principal: el usuario vio los cajones en los dos modos y prefiere `Wallpaper` → **P1 resuelto**. Aplicar: 0,2 s. RAM privada: +3,4 MB (Wallpaper) / +3,1 MB (Frame); el working set sube ~20 MB, sobre todo DLL de shell compartidas. Respaldo → vista previa → restauración devolvió los 184 íconos a su posición exacta. Sin probar: P5 (Win+D) y abrir íconos con doble clic dentro del cajón (confirmar en T5).
 
 ## [ ] T5 — Modo edición
 - `EditOverlay` según SPEC §10: crear, mover (también entre monitores), redimensionar, renombrar, color, orden, mover a monitor N, borrar. Atajo global.

@@ -13,6 +13,7 @@ public partial class App : Application
     private DragWatcher? _watcher;
     private WheelWindow? _wheel;
     private Mutex? _singleInstance;
+    private Orange.Desktop.Engine.DesktopEngine? _desktop;
 
     public static App Instance => (App)Current;
 
@@ -26,6 +27,22 @@ public partial class App : Application
             var probe = e.Args.SkipWhile(a => a != "--probe").Skip(1).FirstOrDefault();
             Shutdown(Orange.Desktop.Shell.DesktopDump.Run(e.Args[1], probe));
             return;
+        }
+        if (e.Args.Length >= 2 && e.Args[0] == "--desktop-backup")
+        {
+            Shutdown(Orange.Desktop.Engine.DesktopDiagnostics.Backup(e.Args[1]));
+            return;
+        }
+        if (e.Args.Length >= 2 && e.Args[0] == "--desktop-restore")
+        {
+            Shutdown(Orange.Desktop.Engine.DesktopDiagnostics.Restore(e.Args[1]));
+            return;
+        }
+        if (e.Args.Length >= 4 && e.Args[0] == "--desktop-preview" && int.TryParse(e.Args[2], out var seconds))
+        {
+            var mode = e.Args.SkipWhile(a => a != "--mode").Skip(1).FirstOrDefault();
+            Orange.Desktop.Engine.DesktopDiagnostics.Preview(e.Args[1], seconds, e.Args[3], mode, Shutdown);
+            return;   // keeps running until the preview timer calls Shutdown
         }
 
         // Windows blocks drag & drop from Explorer into elevated apps (UIPI),
@@ -57,6 +74,7 @@ public partial class App : Application
         _watcher.Start();
 
         CreateTray();
+        StartDesktopModule();
         Settings.Changed += BuildTrayMenu; // new language → new menu texts
         _ = Orange.Core.Share.PhoneBridge.StartAsync();
         AppUpdater.AvailableChanged += () => Dispatcher.BeginInvoke(BuildTrayMenu);
@@ -65,6 +83,15 @@ public partial class App : Application
         var s = Settings.Current;
         Notify(Loc.T("Orange is running"), Loc.F("Drag a file and press {0} (convert), {1} (tools) or {2} (actions).",
             Settings.KeyName(s.ConvertKey), Settings.KeyName(s.ToolsKey), Settings.KeyName(s.ActionsKey)), force: true);
+    }
+
+    /// <summary>Desktop boxes (off by default). Failures are logged and leave the desktop as it was.</summary>
+    private void StartDesktopModule()
+    {
+        if (!Settings.Current.DesktopModuleEnabled) return;
+        _desktop = new Orange.Desktop.Engine.DesktopEngine(new Orange.Desktop.Shell.ShellDesktopIcons(),
+            new Orange.Desktop.Shell.Win32Monitors(), Orange.Desktop.Store.DesktopStore.Default());
+        _desktop.Start();
     }
 
     // ── Updates ───────────────────────────────────────────────────────────
@@ -187,6 +214,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _watcher?.Dispose();
+        _desktop?.Dispose();
         // Off the UI thread: waiting here for a task that needs the UI thread would deadlock.
         Task.Run(Orange.Core.Share.PhoneBridge.StopAsync).Wait(2000);
         if (_tray != null)

@@ -202,6 +202,67 @@ internal static class Native
     [DllImport("user32.dll")]
     public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_TARGET_DEVICE_NAME info);
 
+    // ── Desktop module: box windows ──────────────────────────────────────
+
+    public const int WS_CHILD = 0x40000000, WS_POPUP = unchecked((int)0x80000000), WS_VISIBLE = 0x10000000;
+    public const int WS_CLIPSIBLINGS = 0x04000000;
+    public const int WM_PAINT = 0x000F, WM_ERASEBKGND = 0x0014, WM_MOUSEACTIVATE = 0x0021, WM_NCHITTEST = 0x0084;
+    public const int MA_NOACTIVATE = 3, HTTRANSPARENT = -1;
+    public const uint SMTO_NORMAL = 0;
+    public const uint GW_HWNDPREV = 3;
+    public const int RGN_DIFF = 4;
+    public static readonly IntPtr HWND_BOTTOM = new(1);
+
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr data);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern IntPtr FindWindow(string? className, string? windowName);
+
+    [DllImport("user32.dll")]
+    public static extern bool EnumWindows(EnumWindowsProc proc, IntPtr data);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam,
+        uint flags, uint timeoutMs, out IntPtr result);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetWindow(IntPtr hWnd, uint cmd);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsWindow(IntPtr hWnd);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct PAINTSTRUCT
+    {
+        public IntPtr hdc;
+        public int fErase;
+        public RECT rcPaint;
+        public int fRestore, fIncUpdate;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)] public byte[] rgbReserved;
+    }
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr BeginPaint(IntPtr hWnd, out PAINTSTRUCT ps);
+
+    [DllImport("user32.dll")]
+    public static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
+
+    [DllImport("user32.dll")]
+    public static extern bool InvalidateRect(IntPtr hWnd, IntPtr rect, bool erase);
+
+    [DllImport("gdi32.dll")]
+    public static extern IntPtr CreateRectRgn(int left, int top, int right, int bottom);
+
+    [DllImport("gdi32.dll")]
+    public static extern int CombineRgn(IntPtr dest, IntPtr src1, IntPtr src2, int mode);
+
+    [DllImport("gdi32.dll")]
+    public static extern bool DeleteObject(IntPtr obj);
+
+    /// <summary>On success the system owns the region; do not delete it.</summary>
+    [DllImport("user32.dll")]
+    public static extern int SetWindowRgn(IntPtr hWnd, IntPtr rgn, bool redraw);
+
     // ── Desktop module: shell view of the desktop (COM) ──────────────────
     // Only the vtable slots we call are typed; the others are placeholders that keep the order.
 
