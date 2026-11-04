@@ -20,6 +20,14 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Diagnostics run and exit before the single-instance check, so they work while Orange is open.
+        if (e.Args.Length >= 2 && e.Args[0] == "--desktop-dump")
+        {
+            var probe = e.Args.SkipWhile(a => a != "--probe").Skip(1).FirstOrDefault();
+            Shutdown(Orange.Desktop.Shell.DesktopDump.Run(e.Args[1], probe));
+            return;
+        }
+
         // Windows blocks drag & drop from Explorer into elevated apps (UIPI),
         // so if we were started as admin, restart as a normal user via Explorer.
         if (IsElevated() && !e.Args.Contains("--allow-admin"))

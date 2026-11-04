@@ -140,8 +140,8 @@ Todos los textos con `Loc.T` + traducciones `es` y `pt`.
 
 ## 13. Pendiente de verificar
 - **P1** — En Windows 11 24H2/25H2 cambió la jerarquía `Progman`/`WorkerW`. Verificar que el modo `Wallpaper` funciona en la PC del usuario; si no, usar `Frame`.
-- **P2** — Sistema de coordenadas de `GetItemPosition`/`SelectAndPositionItems` con 3 monitores de distinta escala (DPI) y monitores con coordenadas negativas (a la izquierda o arriba del principal).
-- **P3** — Que `SelectAndPositionItems` desde otro proceso (proxy COM a Explorer) funcione con muchos ítems a la vez sin parpadeo.
+- **P2** — Sistema de coordenadas de `GetItemPosition`/`SelectAndPositionItems` con 3 monitores de distinta escala (DPI) y monitores con coordenadas negativas (a la izquierda o arriba del principal). *(T3: con escala 100 % en los 3, posición = cliente de la vista + origen de la pantalla virtual, exacta también en X negativo. Escalas mixtas sin probar.)*
+- **P3** — Que `SelectAndPositionItems` desde otro proceso (proxy COM a Explorer) funcione con muchos ítems a la vez sin parpadeo. *(T3: posición exacta en los 3 monitores con un ítem; falta medir lotes grandes.)*
 - **P4** — Si apagar `FWF_AUTOARRANGE`/`FWF_SNAPTOGRID` persiste tras reiniciar Explorer, o hay que reaplicarlo.
 - **P5** — Comportamiento de los cajones con Win+D y "Mostrar escritorio".
 - **P6** — Cambio del tamaño de íconos (Ctrl+rueda en el escritorio) → `GetSpacing` cambia: detectar y reacomodar.

@@ -103,6 +103,199 @@ internal static class Native
     [DllImport("kernel32.dll")]
     public static extern bool CloseHandle(IntPtr h);
 
+    // ── Desktop module: windows and monitors ─────────────────────────────
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern IntPtr FindWindowEx(IntPtr parent, IntPtr childAfter, string? className, string? windowName);
+
+    [DllImport("user32.dll")]
+    public static extern bool ClientToScreen(IntPtr hWnd, ref POINT p);
+
+    public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data);
+
+    [DllImport("user32.dll")]
+    public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr clip, MonitorEnumProc proc, IntPtr data);
+
+    public const uint MONITORINFOF_PRIMARY = 1;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct MONITORINFOEX
+    {
+        public int cbSize;
+        public RECT rcMonitor, rcWork;
+        public uint dwFlags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string szDevice;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEX info);
+
+    public const int MDT_EFFECTIVE_DPI = 0;
+
+    [DllImport("shcore.dll")]
+    public static extern int GetDpiForMonitor(IntPtr hMonitor, int dpiType, out uint dpiX, out uint dpiY);
+
+    // QueryDisplayConfig: the only API that gives a monitor's stable device path and friendly name.
+    public const uint QDC_ONLY_ACTIVE_PATHS = 2;
+    public const uint DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1, DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME = 2;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LUID { public uint LowPart; public int HighPart; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_PATH_SOURCE_INFO { public LUID adapterId; public uint id, modeInfoIdx, statusFlags; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_PATH_TARGET_INFO
+    {
+        public LUID adapterId;
+        public uint id, modeInfoIdx, outputTechnology, rotation, scaling;
+        public uint refreshNumerator, refreshDenominator;
+        public uint scanLineOrdering;
+        public int targetAvailable;
+        public uint statusFlags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_PATH_INFO
+    {
+        public DISPLAYCONFIG_PATH_SOURCE_INFO sourceInfo;
+        public DISPLAYCONFIG_PATH_TARGET_INFO targetInfo;
+        public uint flags;
+    }
+
+    /// <summary>Only allocated for QueryDisplayConfig; its union is never read.</summary>
+    [StructLayout(LayoutKind.Sequential, Size = 64)]
+    public struct DISPLAYCONFIG_MODE_INFO { public uint infoType; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DISPLAYCONFIG_DEVICE_INFO_HEADER { public uint type, size; public LUID adapterId; public uint id; }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
+    {
+        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string viewGdiDeviceName;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct DISPLAYCONFIG_TARGET_DEVICE_NAME
+    {
+        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+        public uint flags, outputTechnology;
+        public ushort edidManufactureId, edidProductCodeId;
+        public uint connectorInstance;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string monitorFriendlyDeviceName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string monitorDevicePath;
+    }
+
+    [DllImport("user32.dll")]
+    public static extern int GetDisplayConfigBufferSizes(uint flags, out uint numPaths, out uint numModes);
+
+    [DllImport("user32.dll")]
+    public static extern int QueryDisplayConfig(uint flags, ref uint numPaths, [Out] DISPLAYCONFIG_PATH_INFO[] paths,
+        ref uint numModes, [Out] DISPLAYCONFIG_MODE_INFO[] modes, IntPtr currentTopology);
+
+    [DllImport("user32.dll")]
+    public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME info);
+
+    [DllImport("user32.dll")]
+    public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_TARGET_DEVICE_NAME info);
+
+    // ── Desktop module: shell view of the desktop (COM) ──────────────────
+    // Only the vtable slots we call are typed; the others are placeholders that keep the order.
+
+    public const int CSIDL_DESKTOP = 0;
+    public const int SWC_DESKTOP = 8;
+    public const int SWFO_NEEDDISPATCH = 1;
+    public const uint SVGIO_ALLVIEW = 2;
+    public const uint SVSI_POSITIONITEM = 0x80;
+    public const uint FWF_AUTOARRANGE = 0x1, FWF_SNAPTOGRID = 0x4;
+    public const uint SHGDN_INFOLDER = 0x1, SHGDN_FORPARSING = 0x8000;
+    public const uint SFGAO_LINK = 0x10000, SFGAO_STREAM = 0x400000, SFGAO_FOLDER = 0x20000000;
+
+    public static readonly Guid SID_STopLevelBrowser = new("4C96BE40-915C-11CF-99D3-00AA004AE837");
+    public static readonly Guid IID_IShellBrowser = new("000214E2-0000-0000-C000-000000000046");
+    public static readonly Guid IID_IShellFolder = new("000214E6-0000-0000-C000-000000000046");
+
+    [ComImport, Guid("9BA05972-F6A8-11CF-A442-00A0C90A8F39")]
+    public class ShellWindowsClass { }
+
+    [ComImport, Guid("85CB6900-4D95-11CF-960C-0080C7F4EE85"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
+    public interface IShellWindows
+    {
+        void _Count(); void _Item(); void _NewEnum(); void _Register(); void _RegisterPending();
+        void _Revoke(); void _OnNavigate(); void _OnActivated();
+
+        [PreserveSig]
+        int FindWindowSW(ref object loc, ref object locRoot, int swClass, out int hwnd, int options,
+            [MarshalAs(UnmanagedType.IDispatch)] out object? dispatch);
+    }
+
+    [ComImport, Guid("6D5140C1-7436-11CE-8034-00AA006009FA"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IOleServiceProvider
+    {
+        [PreserveSig]
+        int QueryService(ref Guid service, ref Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object? obj);
+    }
+
+    [ComImport, Guid("000214E2-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IShellBrowser
+    {
+        void _GetWindow(); void _ContextSensitiveHelp(); void _InsertMenusSB(); void _SetMenuSB(); void _RemoveMenusSB();
+        void _SetStatusTextSB(); void _EnableModelessSB(); void _TranslateAcceleratorSB(); void _BrowseObject();
+        void _GetViewStateStream(); void _GetControlWindow(); void _SendControlMsg();
+
+        void QueryActiveShellView([MarshalAs(UnmanagedType.IUnknown)] out object view);
+    }
+
+    [ComImport, Guid("000214E3-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IShellView
+    {
+        void GetWindow(out IntPtr hwnd);   // from IOleWindow: the SHELLDLL_DefView window
+    }
+
+    [ComImport, Guid("000214E6-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IShellFolder
+    {
+        void _ParseDisplayName(); void _EnumObjects(); void _BindToObject(); void _BindToStorage();
+        void _CompareIDs(); void _CreateViewObject();
+
+        void GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] pidls, ref uint attributes);
+        void _GetUIObjectOf();
+        void GetDisplayNameOf(IntPtr pidl, uint flags, out STRRET name);
+    }
+
+    /// <summary>64-bit layout: 4-byte type, then an 8-byte-aligned 260-byte union.</summary>
+    [StructLayout(LayoutKind.Explicit, Size = 272)]
+    public struct STRRET { [FieldOffset(0)] public uint uType; }
+
+    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
+    public static extern int StrRetToStrW(ref STRRET strret, IntPtr pidl, out IntPtr text);
+
+    // IFolderView2 repeats IFolderView's methods first: .NET COM interop has no interface inheritance.
+    [ComImport, Guid("1AF3A467-214F-4298-908E-06B03E0B39F9"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IFolderView2
+    {
+        void _GetCurrentViewMode(); void _SetCurrentViewMode();
+        void GetFolder(ref Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object folder);
+        void Item(int index, out IntPtr pidl);
+        void ItemCount(uint flags, out int count);
+        void _Items(); void _GetSelectionMarkedItem(); void _GetFocusedItem();
+        void GetItemPosition(IntPtr pidl, out POINT pt);
+        void GetSpacing(out POINT pt);
+        void GetDefaultSpacing(out POINT pt);
+        [PreserveSig] int GetAutoArrange();   // S_OK = on, S_FALSE = off
+        void _SelectItem();
+        void SelectAndPositionItems(uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] pidls,
+            [MarshalAs(UnmanagedType.LPArray)] POINT[] points, uint flags);
+
+        void _SetGroupBy(); void _GetGroupBy(); void _SetViewProperty(); void _GetViewProperty();
+        void _SetTileViewProperties(); void _SetExtendedTileViewProperties(); void _SetText();
+        void SetCurrentFolderFlags(uint mask, uint flags);
+        void GetCurrentFolderFlags(out uint flags);
+    }
+
     public static bool IsDown(int vk) => (GetAsyncKeyState(vk) & 0x8000) != 0;
 
     /// <summary>File name (e.g. "explorer.exe") of the process that owns the window under a screen point, or null.</summary>

@@ -34,12 +34,14 @@ Prompt sugerido para cada sesión:
 
 > Notas: `Orange/Desktop/Layout/` — `Geometry` (píxeles físicos de pantalla virtual), `MonitorMap` (numeración izquierda→derecha, fracciones ⇄ píxeles, monitor por centro o el más cercano, huérfanos), `BoxLayout` (cuadrícula centrada bajo el título, orden natural / por tipo / manual, overflow), `Membership` (`FromPositions` por centro del ícono; `Reassign` aplica arrastres y marca `looseItems`), `RuleMatcher` (primer cajón que coincide; regex cacheada con 50 ms). Se asume que la posición del ítem es su esquina superior izquierda y que la celda es `GetSpacing`: confirmar en T3 (P2).
 
-## [ ] T3 — Acceso al escritorio (Shell COM)
+## [x] T3 — Acceso al escritorio (Shell COM)
 - `IDesktopIcons` + `ShellDesktopIcons` según SPEC §8: listar ítems (nombre, posición), `GetSpacing`, posicionar por lotes, desactivar auto-organizar/alinear a cuadrícula, reconectar si Explorer se reinicia.
 - `IMonitors` + implementación Win32 (`EnumDisplayMonitors`, `GetMonitorInfo`, `GetDpiForMonitor`, `QueryDisplayConfig` para la MonitorKey).
 - Comando de diagnóstico: `Orange.exe --desktop-dump <salida.md>` que escribe monitores (key, nombre, área, DPI) e ítems del escritorio con posición, y sale sin abrir la app.
 
 **Aceptación (manual, anotar):** el dump en la PC del usuario lista los 3 monitores y todos los íconos con posiciones coherentes (resolver P2). Mover un ícono por código a cada monitor funciona (P3).
+
+> Notas: COM y P/Invoke en `Native.cs`; `Desktop/Shell/` con `ShellDesktopIcons` (ShellWindows → IFolderView2, nombre por `SHGDN_INFOLDER|FORPARSING`, tipo por `SFGAO_*`, reconecta una vez si el proxy muere), `Win32Monitors` (clave = `monitorDevicePath` de QueryDisplayConfig) y `DesktopDump`. `--probe` también restaura los flags de organizar/alinear. Resultado en la PC del usuario (Win 11 26200, 3 monitores a 100 %, uno a la izquierda en X negativo): 3 monitores con nombre y ruta estable, 184 ítems; origen de la vista = origen de la pantalla virtual (-1280, 0); celda 94 × 114; sondeo en los 3 monitores con Δ = 0, 0 → **P2 y P3 resueltos** para escala 100 % (con escalas distintas por monitor queda sin probar). P4 sigue pendiente.
 
 ## [ ] T4 — Dibujo de cajones
 - `BoxWindow` en modos `Wallpaper` y `Frame` (SPEC §9). Si `Wallpaper` falla, registrar y caer a `Frame`.
