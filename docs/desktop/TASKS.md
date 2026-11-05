@@ -83,6 +83,8 @@ Prompt sugerido para cada sesión:
 
 **Aceptación:** sin regresiones en las ruedas de conversión ni en compartir con el teléfono.
 
+> Avance (sin cerrar): sección "Escritorio" en Ajustes (activar, modo de dibujo, cajones de monitor ausente, atajos validados con `Hotkey.TryParse`); guardar arranca/detiene/reinicia el módulo en caliente (`App.RestartDesktopModule`; al apagar vuelve a mostrar íconos ocultos y no toca archivos). `DesktopEvents` ignora eventos encolados tras `Dispose`. READMEs con sección corta. Versión 1.3.0 e instalador generado. 61 pruebas OK. Pendiente: prueba manual del usuario y RAM: arranca en ~64 MB privados, pero en una sesión saltó a ~390 MB tras una acción del usuario (heap .NET 8 MB; el resto es nativo, con drivers de NVIDIA e Intel cargados por WPF). Causa sin confirmar.
+
 ---
 ## Notas / pendientes descubiertos
 (Agregar aquí lo encontrado, con referencia a P1–P6 de SPEC §13.)

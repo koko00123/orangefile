@@ -52,6 +52,12 @@ Files go straight over your Wi-Fi. Only phones that scanned your code can connec
 
 <br clear="right">
 
+## 🗂️ Boxes for your desktop icons
+
+Optional module (off by default): groups desktop icons into boxes with a title and a color, on one or more monitors. Turn it on in **Settings → Desktop**, then use **Edit desktop** (Ctrl+Alt+D) from the tray to create, move and resize boxes. New files can join a box by themselves based on their extension, and you can save several layouts (for example, Home and Work).
+
+It only changes where icons sit: files are never moved, renamed or deleted.
+
 ## Formats
 
 | | |

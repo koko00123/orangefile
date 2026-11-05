@@ -149,6 +149,48 @@
             </StackPanel>
         </Border>
 
+        <!-- Desktop module (icon boxes) -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock x:Name="DesktopHeader" Style="{StaticResource Header}" Text="Desktop (icon boxes)" />
+                <CheckBox x:Name="DesktopBox" Content="Organize desktop icons into boxes" />
+                <TextBlock x:Name="DesktopNote" Text="Only moves icons. Files are never moved, renamed or deleted."
+                           Foreground="#6B6B73" TextWrapping="Wrap" Margin="20,0,0,4" />
+                <StackPanel x:Name="DesktopOptions">
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition /><ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="RenderModeLabel" Text="Draw boxes" VerticalAlignment="Center" />
+                        <ComboBox x:Name="RenderModeBox" Grid.Column="1" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition /><ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="OrphanLabel" Text="Boxes of a disconnected monitor" VerticalAlignment="Center" />
+                        <ComboBox x:Name="OrphanBox" Grid.Column="1" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition /><ColumnDefinition Width="150" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="EditHotkeyLabel" Text="Shortcut to edit the desktop" VerticalAlignment="Center" />
+                        <TextBox x:Name="EditHotkeyBox" Grid.Column="1" Padding="5,3" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition /><ColumnDefinition Width="150" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="HideHotkeyLabel" Text="Shortcut to hide icons (optional)" VerticalAlignment="Center" />
+                        <TextBox x:Name="HideHotkeyBox" Grid.Column="1" Padding="5,3" />
+                    </Grid>
+                    <TextBlock x:Name="HotkeyWarning" Text="Use a shortcut like Ctrl+Alt+D." Foreground="#C62828"
+                               Margin="0,4,0,0" Visibility="Collapsed" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
         <!-- Updates -->
         <Border Style="{StaticResource Card}">
             <StackPanel>

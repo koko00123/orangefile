@@ -52,6 +52,12 @@ Los archivos van directo por tu Wi-Fi. Solo los teléfonos que escanearon tu có
 
 <br clear="right">
 
+## 🗂️ Cajones para los íconos del escritorio
+
+Módulo opcional (apagado por defecto): agrupa los íconos del escritorio en cajones con título y color, en uno o varios monitores. Actívalo en **Ajustes → Escritorio** y luego usa **Editar escritorio** (Ctrl+Alt+D) desde la bandeja para crear, mover y redimensionar cajones. Los archivos nuevos pueden entrar solos a un cajón según su extensión, y puedes guardar varias distribuciones (por ejemplo, Casa y Trabajo).
+
+Solo cambia la posición de los íconos: nunca mueve, renombra ni borra archivos.
+
 ## Formatos
 
 | | |

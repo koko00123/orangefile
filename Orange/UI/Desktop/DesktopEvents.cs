@@ -89,7 +89,8 @@ internal sealed class DesktopEvents : Forms.NativeWindow, IDisposable
     private void Run(Action action, string what)
     {
         // Edit mode owns the boxes; catch up once it closes (Done applies everything).
-        if (_paused()) return;
+        // A file event queued just before the module was turned off must not touch the disposed engine.
+        if (_disposed || _paused()) return;
         try { action(); }
         catch (Exception ex) { JobRunner.Log($"Desktop: could not {what}: {ex}"); }
     }
@@ -101,16 +102,20 @@ internal sealed class DesktopEvents : Forms.NativeWindow, IDisposable
         return t;
     }
 
-    private static void Restart(DispatcherTimer t)
+    private void Restart(DispatcherTimer t)
     {
+        if (_disposed) return;
         t.Stop();
         t.Start();
     }
 
     private static void Post(Action a) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(a);
 
+    private bool _disposed;
+
     public void Dispose()
     {
+        _disposed = true;
         foreach (var t in new[] { _files, _drop, _display, _explorer }) t.Stop();
         foreach (var w in _watchers) w.Dispose();
         _watchers.Clear();

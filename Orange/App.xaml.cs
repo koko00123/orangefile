@@ -109,6 +109,37 @@ public partial class App : Application
         BuildTrayMenu();
     }
 
+    /// <summary>Stops the Desktop module. Boxes disappear; icons stay where they are and no file is touched.</summary>
+    private void StopDesktopModule()
+    {
+        if (_desktop is null) return;
+        try
+        {
+            if (_desktopEdit is { IsOpen: true }) _desktopEdit.Close();
+            _desktopEdit = null;
+            // Hidden icons would stay hidden with no menu to bring them back.
+            if (_desktop.IconsHidden) _desktop.SetIconsHidden(false);
+        }
+        catch (Exception ex) { JobRunner.Log($"Desktop: could not close cleanly: {ex.Message}"); }
+        if (_watcher is not null && _desktopEvents is not null) _watcher.LeftButtonUp -= _desktopEvents.OnLeftButtonUp;
+        _desktopHotkey?.Dispose();
+        _desktopEvents?.Dispose();
+        _desktop.Dispose();
+        (_desktopHotkey, _desktopEvents, _desktop) = (null, null, null);
+    }
+
+    /// <summary>Applies the Desktop settings (Settings window): starts, stops or restarts the module.</summary>
+    public void RestartDesktopModule()
+    {
+        try
+        {
+            StopDesktopModule();
+            StartDesktopModule();
+        }
+        catch (Exception ex) { JobRunner.Log($"Desktop: could not restart the module: {ex}"); }
+        BuildTrayMenu();
+    }
+
     // Hotkey ids: edit mode, hide icons, then one per layout (by position in the list).
     private const int HotkeyEdit = 1, HotkeyHide = 2, HotkeyLayoutBase = 100;
 

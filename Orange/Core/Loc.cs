@@ -59,6 +59,15 @@ public static class Loc
             ["Remove shortcut"] = "Quitar atajo", ["Delete layout"] = "Borrar distribución",
             ["Delete the layout \"{0}\"? Its boxes are removed; icons stay on the desktop."] = "¿Borrar la distribución «{0}»? Se quitan sus cajones; los íconos se quedan en el escritorio.",
             ["Hide desktop icons"] = "Ocultar íconos del escritorio",
+            ["Desktop (icon boxes)"] = "Escritorio (cajones de íconos)",
+            ["Organize desktop icons into boxes"] = "Organizar los íconos del escritorio en cajones",
+            ["Only moves icons. Files are never moved, renamed or deleted."] = "Solo mueve íconos. Nunca mueve, renombra ni borra archivos.",
+            ["Draw boxes"] = "Dibujar cajones", ["Behind the icons"] = "Detrás de los íconos", ["As a frame"] = "Como marco",
+            ["Boxes of a disconnected monitor"] = "Cajones de un monitor desconectado",
+            ["Hide them"] = "Ocultarlos", ["Show on the main monitor"] = "Mostrar en el monitor principal",
+            ["Shortcut to edit the desktop"] = "Atajo para editar el escritorio",
+            ["Shortcut to hide icons (optional)"] = "Atajo para ocultar íconos (opcional)",
+            ["Use a shortcut like Ctrl+Alt+D."] = "Usa un atajo como Ctrl+Alt+D.",
 
             // Notifications
             ["Done"] = "Listo", ["{0} files done"] = "{0} archivos listos", ["{0}: {1} failed"] = "{0}: {1} con error",
@@ -229,6 +238,15 @@ public static class Loc
             ["Remove shortcut"] = "Remover atalho", ["Delete layout"] = "Excluir layout",
             ["Delete the layout \"{0}\"? Its boxes are removed; icons stay on the desktop."] = "Excluir o layout \"{0}\"? As caixas são removidas; os ícones continuam na área de trabalho.",
             ["Hide desktop icons"] = "Ocultar ícones da área de trabalho",
+            ["Desktop (icon boxes)"] = "Área de trabalho (caixas de ícones)",
+            ["Organize desktop icons into boxes"] = "Organizar os ícones da área de trabalho em caixas",
+            ["Only moves icons. Files are never moved, renamed or deleted."] = "Só move ícones. Os arquivos nunca são movidos, renomeados ou excluídos.",
+            ["Draw boxes"] = "Desenhar caixas", ["Behind the icons"] = "Atrás dos ícones", ["As a frame"] = "Como moldura",
+            ["Boxes of a disconnected monitor"] = "Caixas de um monitor desconectado",
+            ["Hide them"] = "Ocultá-las", ["Show on the main monitor"] = "Mostrar no monitor principal",
+            ["Shortcut to edit the desktop"] = "Atalho para editar a área de trabalho",
+            ["Shortcut to hide icons (optional)"] = "Atalho para ocultar ícones (opcional)",
+            ["Use a shortcut like Ctrl+Alt+D."] = "Use um atalho como Ctrl+Alt+D.",
 
             // Notifications
             ["Done"] = "Pronto", ["{0} files done"] = "{0} arquivos prontos", ["{0}: {1} failed"] = "{0}: {1} com erro",

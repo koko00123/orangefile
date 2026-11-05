@@ -65,6 +65,15 @@ public partial class SettingsWindow : Window
         };
         PairButton.Click += (_, _) => PairWindow.ShowSingle();
 
+        DesktopBox.IsChecked = s.DesktopModuleEnabled;
+        DesktopBox.Checked += (_, _) => DesktopOptions.IsEnabled = true;
+        DesktopBox.Unchecked += (_, _) => DesktopOptions.IsEnabled = false;
+        DesktopOptions.IsEnabled = s.DesktopModuleEnabled;
+        EditHotkeyBox.Text = s.DesktopEditHotkey;
+        HideHotkeyBox.Text = s.DesktopHideHotkey;
+        EditHotkeyBox.TextChanged += (_, _) => CheckKeys();
+        HideHotkeyBox.TextChanged += (_, _) => CheckKeys();
+
         VersionText.Text = $"Orange {AppUpdater.Current}";
         AutoUpdateBox.IsChecked = s.AutoCheckUpdates;
         CheckNowButton.Click += CheckNowClick;
@@ -103,6 +112,21 @@ public partial class SettingsWindow : Window
         InboxLabel.Text = T("Files from the phone go to:");
         InboxBrowse.Content = T("Browse…");
         PairButton.Content = T("Connect phone…");
+        DesktopHeader.Text = T("Desktop (icon boxes)");
+        DesktopBox.Content = T("Organize desktop icons into boxes");
+        DesktopNote.Text = T("Only moves icons. Files are never moved, renamed or deleted.");
+        RenderModeLabel.Text = T("Draw boxes");
+        OrphanLabel.Text = T("Boxes of a disconnected monitor");
+        EditHotkeyLabel.Text = T("Shortcut to edit the desktop");
+        HideHotkeyLabel.Text = T("Shortcut to hide icons (optional)");
+        HotkeyWarning.Text = T("Use a shortcut like Ctrl+Alt+D.");
+        // Rebuilt so the items follow the language; the index maps to the enum value.
+        int render = RenderModeBox.SelectedIndex >= 0 ? RenderModeBox.SelectedIndex : (int)Settings.Current.DesktopRenderMode;
+        RenderModeBox.ItemsSource = new[] { T("Behind the icons"), T("As a frame") };
+        RenderModeBox.SelectedIndex = render;
+        int orphan = OrphanBox.SelectedIndex >= 0 ? OrphanBox.SelectedIndex : (int)Settings.Current.DesktopOrphanBoxes;
+        OrphanBox.ItemsSource = new[] { T("Hide them"), T("Show on the main monitor") };
+        OrphanBox.SelectedIndex = orphan;
         EnginesHeader.Text = T("Engines");
         UpdatesHeader.Text = T("Updates");
         AutoUpdateBox.Content = T("Check for new versions automatically");
@@ -251,8 +275,14 @@ public partial class SettingsWindow : Window
         var picked = new[] { ConvertKeyBox.SelectedIndex, ToolsKeyBox.SelectedIndex, ActionsKeyBox.SelectedIndex };
         bool ok = picked.Distinct().Count() == 3;
         KeyWarning.Visibility = ok ? Visibility.Collapsed : Visibility.Visible;
-        SaveButton.IsEnabled = ok;
-        return ok;
+
+        // The edit shortcut is required; the hide shortcut may be empty.
+        bool hotkeysOk = Orange.Desktop.Engine.Hotkey.TryParse(EditHotkeyBox.Text.Trim(), out _, out _)
+            && (HideHotkeyBox.Text.Trim().Length == 0 || Orange.Desktop.Engine.Hotkey.TryParse(HideHotkeyBox.Text.Trim(), out _, out _));
+        HotkeyWarning.Visibility = hotkeysOk ? Visibility.Collapsed : Visibility.Visible;
+
+        SaveButton.IsEnabled = ok && hotkeysOk;
+        return ok && hotkeysOk;
     }
 
     private void Browse()
@@ -288,8 +318,18 @@ public partial class SettingsWindow : Window
         s.PhoneSharing = PhoneBox.IsChecked == true;
         s.PhoneInbox = InboxBox.Text;
         bool phoneChanged = s.PhoneSharing != Settings.Current.PhoneSharing;
+        s.DesktopModuleEnabled = DesktopBox.IsChecked == true;
+        s.DesktopRenderMode = (DesktopRenderMode)Math.Max(0, RenderModeBox.SelectedIndex);
+        s.DesktopOrphanBoxes = (DesktopOrphanBoxes)Math.Max(0, OrphanBox.SelectedIndex);
+        s.DesktopEditHotkey = EditHotkeyBox.Text.Trim();
+        s.DesktopHideHotkey = HideHotkeyBox.Text.Trim();
+        var old = Settings.Current;
+        bool desktopChanged = s.DesktopModuleEnabled != old.DesktopModuleEnabled || s.DesktopRenderMode != old.DesktopRenderMode
+            || s.DesktopOrphanBoxes != old.DesktopOrphanBoxes || s.DesktopEditHotkey != old.DesktopEditHotkey
+            || s.DesktopHideHotkey != old.DesktopHideHotkey;
         Settings.Save(s);
         if (phoneChanged) _ = Orange.Core.Share.PhoneBridge.RestartAsync(); // starts or stops the server
+        if (desktopChanged) App.Instance.RestartDesktopModule();             // starts, stops or redraws the boxes
 
         Autostart.Set(AutostartBox.IsChecked == true);
         Close();

@@ -52,6 +52,12 @@ Os arquivos vão direto pelo seu Wi-Fi. Só os celulares que escanearam o seu c�
 
 <br clear="right">
 
+## 🗂️ Caixas para os ícones da área de trabalho
+
+Módulo opcional (desligado por padrão): agrupa os ícones da área de trabalho em caixas com título e cor, em um ou vários monitores. Ative em **Configurações → Área de trabalho** e depois use **Editar área de trabalho** (Ctrl+Alt+D) na bandeja para criar, mover e redimensionar caixas. Arquivos novos podem entrar sozinhos numa caixa conforme a extensão, e você pode salvar vários layouts (por exemplo, Casa e Trabalho).
+
+Só muda a posição dos ícones: os arquivos nunca são movidos, renomeados ou excluídos.
+
 ## Formatos
 
 | | |
