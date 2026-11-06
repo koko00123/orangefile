@@ -7,6 +7,7 @@ namespace Orange.Input;
 /// <summary>
 /// Watches the global mouse and keyboard. When the left button is held and moved past the
 /// system drag threshold (a drag is in progress) and a mode key is pressed, it asks for the wheel.
+/// A middle click while a mode key is held also asks for it (for the files already selected).
 /// Only drags that start in an app from Settings.DragSourceApps (Explorer by default) are watched.
 ///   Shift → Convert, Ctrl → Tools, Alt → Actions, Esc → cancel.
 /// </summary>
@@ -26,7 +27,10 @@ public sealed class DragWatcher : IDisposable
     private readonly Dispatcher _dispatcher;
     private IntPtr _mouseHook, _keyHook;
 
-    private bool _buttonDown, _dragging, _wheelShown;
+    /// <summary>Mode key held + middle click over an allowed app: open the wheel for the selected files.</summary>
+    public event Action<WheelMode, int, int>? MiddleClickRequested;
+
+    private bool _buttonDown, _dragging, _wheelShown, _middleSwallowed;
     private Native.POINT _downPt;
     private WheelMode? _lastMode;
 
@@ -73,6 +77,26 @@ public sealed class DragWatcher : IDisposable
                         // The user may already be holding a mode key when the drag starts.
                         var held = HeldMode();
                         if (held is { } m) RequestWheel(m);
+                    }
+                    break;
+
+                // Mode key + middle click in Explorer: open the wheel for the selected files.
+                // The click is swallowed so Explorer doesn't also act on it (e.g. open in new tab).
+                case Native.WM_MBUTTONDOWN:
+                    if (HeldMode() is { } mm && IsAllowedSource(info.pt))
+                    {
+                        _middleSwallowed = true;
+                        var pt = info.pt;
+                        Post(() => MiddleClickRequested?.Invoke(mm, pt.X, pt.Y));
+                        return (IntPtr)1;
+                    }
+                    break;
+
+                case Native.WM_MBUTTONUP:
+                    if (_middleSwallowed)
+                    {
+                        _middleSwallowed = false;
+                        return (IntPtr)1;
                     }
                     break;
 

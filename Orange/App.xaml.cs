@@ -77,6 +77,11 @@ public partial class App : Application
         _watcher.DragEnded += () => _wheel.HideIfIdle();
         _watcher.CancelRequested += () => _wheel.HideWheel();
         _watcher.MouseDown += (x, y) => _wheel.OnGlobalMouseDown(x, y);
+        _watcher.MiddleClickRequested += (mode, x, y) =>
+        {
+            var files = ExplorerSelection.At(x, y);
+            if (files.Count > 0) _wheel.ShowForFiles(files, mode, x, y);
+        };
         _watcher.Start();
 
         CreateTray();
